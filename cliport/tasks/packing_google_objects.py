@@ -19,6 +19,7 @@ class PackingSeenGoogleObjectsSeq(Task):
         self.task_completed_desc = "done packing objects."
         self.object_names = self.get_object_names()
         self.race_test_hack = False
+        # self.choose_one_name_only = None
 
     def get_object_names(self):
         return {
@@ -270,7 +271,12 @@ class PackingSeenGoogleObjectsSeq(Task):
         # HACK SET BBOXES TO 2 - FOR PEOPLE TEST - DELETE NEXT LINE AND MAKE A MORE COHESIVE TEST
         if self.race_test_hack:
             bboxes = bboxes[:2]
+        
         chosen_objs, repeat_category = self.choose_objects(object_names, len(bboxes))
+        # if self.choose_one_name_only is None:
+        #     chosen_objs, repeat_category = self.choose_objects(object_names, len(bboxes))
+        # else:
+        #     chosen_objs = [choose_one_name_only] * len(bboxes)
         object_descs = []
         for i, bbox in enumerate(bboxes):
             size = bbox[3:] - bbox[:3]
@@ -628,11 +634,145 @@ class PackingUnseenGoogleObjectsRaceSeq(PackingSeenGoogleObjectsSeq):
                 'toy school bus',
             ],
             'val': [
-                'white just for men',
-                'black just for men',
+                'black just for men box',
+                'white just for men box',
             ],
             'test': [
-                'white just for men',
-                'black just for men',
+                'black just for men box',
+                'white just for men box',
             ],
         }
+
+
+class PackingUnseenGoogleObjectsRaceBlackSeq(PackingSeenGoogleObjectsSeq):
+    """Packing Unseen Google Objects Sequence task."""
+
+    def __init__(self):
+        super().__init__()
+        self.race_test_hack = True
+        # self.choose_one_name_only = 'black just for men box'
+
+    def get_object_names(self):
+        return {
+            'train': [
+                'alarm clock',
+                'android toy',
+                'black boot with leopard print',
+                'black fedora',
+                'black razer mouse',
+                'black sandal',
+                'black shoe with orange stripes',
+                'bull figure',
+                'butterfinger chocolate',
+                'c clamp',
+                'can opener',
+                'crayon box',
+                'dog statue',
+                'frypan',
+                'green and white striped towel',
+                'grey soccer shoe with cleats',
+                'hard drive',
+                'honey dipper',
+                'magnifying glass',
+                'mario figure',
+                'nintendo 3ds',
+                'nintendo cartridge',
+                'office depot box',
+                'orca plush toy',
+                'pepsi gold caffeine free box',
+                'pepsi wild cherry box',
+                'porcelain cup',
+                'purple tape',
+                'red and white flashlight',
+                'rhino figure',
+                'rocket racoon figure',
+                'scissors',
+                'silver tape',
+                'spatula with purple head',
+                'spiderman figure',
+                'tablet',
+                'toy school bus',
+            ],
+            'val': [
+                'black just for men box',
+                'white just for men box',
+            ],
+            'test': [
+                'black just for men box',
+                'white just for men box',
+            ],
+        }
+
+    def choose_objects(self, object_names, k):
+        repeat_category = None
+        if self.mode is not 'train':
+            return [object_names[0], object_names[1]], repeat_category
+        else:
+            return np.random.choice(object_names, k, replace=False), repeat_category
+
+
+class PackingUnseenGoogleObjectsRaceWhiteSeq(PackingSeenGoogleObjectsSeq):
+    """Packing Unseen Google Objects Sequence task."""
+
+    def __init__(self):
+        super().__init__()
+        self.race_test_hack = True
+        # self.choose_one_name_only = 'white just for men box'
+
+    def get_object_names(self):
+        return {
+            'train': [
+                'alarm clock',
+                'android toy',
+                'black boot with leopard print',
+                'black fedora',
+                'black razer mouse',
+                'black sandal',
+                'black shoe with orange stripes',
+                'bull figure',
+                'butterfinger chocolate',
+                'c clamp',
+                'can opener',
+                'crayon box',
+                'dog statue',
+                'frypan',
+                'green and white striped towel',
+                'grey soccer shoe with cleats',
+                'hard drive',
+                'honey dipper',
+                'magnifying glass',
+                'mario figure',
+                'nintendo 3ds',
+                'nintendo cartridge',
+                'office depot box',
+                'orca plush toy',
+                'pepsi gold caffeine free box',
+                'pepsi wild cherry box',
+                'porcelain cup',
+                'purple tape',
+                'red and white flashlight',
+                'rhino figure',
+                'rocket racoon figure',
+                'scissors',
+                'silver tape',
+                'spatula with purple head',
+                'spiderman figure',
+                'tablet',
+                'toy school bus',
+            ],
+            'val': [
+                'black just for men box',
+                'white just for men box',
+            ],
+            'test': [
+                'black just for men box',
+                'white just for men box',
+            ],
+        }
+
+    def choose_objects(self, object_names, k):
+        repeat_category = None
+        if self.mode is not 'train':
+            return [object_names[1], object_names[0]], repeat_category
+        else:
+            return np.random.choice(object_names, k, replace=False), repeat_category

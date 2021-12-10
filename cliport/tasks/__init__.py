@@ -21,6 +21,8 @@ from cliport.tasks.packing_boxes_pairs import PackingBoxesPairsFull
 from cliport.tasks.packing_google_objects import PackingSeenGoogleObjectsSeq
 from cliport.tasks.packing_google_objects import PackingUnseenGoogleObjectsSeq
 from cliport.tasks.packing_google_objects import PackingUnseenGoogleObjectsRaceSeq
+from cliport.tasks.packing_google_objects import PackingUnseenGoogleObjectsRaceBlackSeq
+from cliport.tasks.packing_google_objects import PackingUnseenGoogleObjectsRaceWhiteSeq
 from cliport.tasks.packing_google_objects import PackingSeenGoogleObjectsGroup
 from cliport.tasks.packing_google_objects import PackingUnseenGoogleObjectsGroup
 from cliport.tasks.palletizing_boxes import PalletizingBoxes
@@ -72,6 +74,8 @@ names = {
     'packing-seen-google-objects-seq': PackingSeenGoogleObjectsSeq,
     'packing-unseen-google-objects-seq': PackingUnseenGoogleObjectsSeq,
     'packing-unseen-google-objects-race-seq': PackingUnseenGoogleObjectsRaceSeq,
+    'packing-unseen-google-objects-race-black-seq': PackingUnseenGoogleObjectsRaceBlackSeq,
+    'packing-unseen-google-objects-race-white-seq': PackingUnseenGoogleObjectsRaceWhiteSeq,
     'packing-seen-google-objects-group': PackingSeenGoogleObjectsGroup,
     'packing-unseen-google-objects-group': PackingUnseenGoogleObjectsGroup,
     'put-block-in-bowl-seen-colors': PutBlockInBowlSeenColors,
