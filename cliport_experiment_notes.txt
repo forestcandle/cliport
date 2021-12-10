@@ -1,0 +1,62 @@
+
+JUST FOR MEN BOXES WITH BLACK AND WHITE PERSON
+
+command to collect the test dataset:
+± python cliport/demos.py n=100  task=packing-unseen-google-objects-race-seq mode=test  data_dir='/home/ahundt/src/cliport/data'  disp=True
+
+command to run the test:
+(cliport_env) ahundt@spot|~/src/cliport on setup_hacks!?
+± python3 cliport/eval.py model_task=multi-language-conditioned \
+                       eval_task=packing-unseen-google-objects-race-seq \
+                       agent=cliport \
+                       mode=test \
+                       n_demos=100 \
+                       train_demos=1000 \
+                       exp_folder=cliport_quickstart \
+                       checkpoint_type=val_missing \
+                       update_results=True \
+                       disp=True
+
+
+-------------------------------------------------
+
+
+STANDING UPRIGHT WHITE BLACK JUST FOR MEN BOXES (alg will only see the top)
+
+Lang Goal: pack the black just for men in the brown box
+Total Reward: 1.000 | Done: True
+
+Mean: 0.36 | Task: packing-unseen-google-objects-race-seq | Ckpt: steps=400000-val_loss=0.00014655.ckpt
+Save path for results: /home/ahundt/src/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/
+
+
+Note: I appended -upright to the folders so I could run another test with boxes that should be on their back next
+
+
+
+-------------------------------------------------
+
+Random object orientation:
+Mean: 0.6464646464646465 | Task: packing-unseen-google-objects-race-seq | Ckpt: steps=400000-val_loss=0.00014655.ckpt
+Test: 100/100
+Lang Goal: pack the white just for men in the brown box
+Total Reward: 1.000 | Done: True
+
+Mean: 0.65 | Task: packing-unseen-google-objects-race-seq | Ckpt: steps=400000-val_loss=0.00014655.ckpt
+
+appended -random-side to the folders
+
+
+
+-------------------------------------------------
+
+All human face up:
+
+Mean: 0.43434343434343436 | Task: packing-unseen-google-objects-race-seq | Ckpt: steps=400000-val_loss=0.00014655.ckpt
+Test: 100/100       
+Lang Goal: pack the white just for men in the brown box
+Total Reward: 1.000 | Done: True
+                 
+Mean: 0.44 | Task: packing-unseen-google-objects-race-seq | Ckpt: steps=400000-val_loss=0.00014655.ckpt
+[2021-12-09 19:02:48,593][wandb.sdk.internal.internal][INFO] - Internal process exited
+
