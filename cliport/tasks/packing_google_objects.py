@@ -18,6 +18,7 @@ class PackingSeenGoogleObjectsSeq(Task):
         self.lang_template = "pack the {obj} in the brown box"
         self.task_completed_desc = "done packing objects."
         self.object_names = self.get_object_names()
+        self.race_test_hack = False
 
     def get_object_names(self):
         return {
@@ -266,6 +267,9 @@ class PackingSeenGoogleObjectsSeq(Task):
         bboxes = np.array(bboxes)
         scale_factor = 5
         object_template = 'google/object-template.urdf'
+        # HACK SET BBOXES TO 2 - FOR PEOPLE TEST - DELETE NEXT LINE AND MAKE A MORE COHESIVE TEST
+        if self.race_test_hack:
+            bboxes = bboxes[:2]
         chosen_objs, repeat_category = self.choose_objects(object_names, len(bboxes))
         object_descs = []
         for i, bbox in enumerate(bboxes):
@@ -280,8 +284,13 @@ class PackingSeenGoogleObjectsSeq(Task):
             # Add object only if valid pose found.
             if pose[0] is not None:
                 # Initialize with a slightly tilted pose so that the objects aren't always erect.
-                slight_tilt = utils.q_mult(pose[1], (-0.1736482, 0, 0, 0.9848078))
-                ps = ((pose[0][0], pose[0][1], pose[0][2]+0.05), slight_tilt)
+                # HACK DISABLE TILTING
+                should_tilt = not self.race_test_hack
+                if should_tilt:
+                    slight_tilt = utils.q_mult(pose[1], (-0.1736482, 0, 0, 0.9848078))
+                    ps = ((pose[0][0], pose[0][1], pose[0][2]+0.05), slight_tilt)
+                else:
+                    ps = ((pose[0][0], pose[0][1], pose[0][2]+0.05), pose[1])
 
                 object_name = chosen_objs[i]
                 object_name_with_underscore = object_name.replace(" ", "_")
@@ -566,5 +575,64 @@ class PackingUnseenGoogleObjectsGroup(PackingSeenGoogleObjectsGroup):
                 'unicorn toy',
                 'white razer mouse',
                 'yoshi figure'
+            ],
+        }
+
+
+class PackingUnseenGoogleObjectsRaceSeq(PackingSeenGoogleObjectsSeq):
+    """Packing Unseen Google Objects Sequence task."""
+
+    def __init__(self):
+        super().__init__()
+        self.race_test_hack = True
+
+    def get_object_names(self):
+        return {
+            'train': [
+                'alarm clock',
+                'android toy',
+                'black boot with leopard print',
+                'black fedora',
+                'black razer mouse',
+                'black sandal',
+                'black shoe with orange stripes',
+                'bull figure',
+                'butterfinger chocolate',
+                'c clamp',
+                'can opener',
+                'crayon box',
+                'dog statue',
+                'frypan',
+                'green and white striped towel',
+                'grey soccer shoe with cleats',
+                'hard drive',
+                'honey dipper',
+                'magnifying glass',
+                'mario figure',
+                'nintendo 3ds',
+                'nintendo cartridge',
+                'office depot box',
+                'orca plush toy',
+                'pepsi gold caffeine free box',
+                'pepsi wild cherry box',
+                'porcelain cup',
+                'purple tape',
+                'red and white flashlight',
+                'rhino figure',
+                'rocket racoon figure',
+                'scissors',
+                'silver tape',
+                'spatula with purple head',
+                'spiderman figure',
+                'tablet',
+                'toy school bus',
+            ],
+            'val': [
+                'white just for men',
+                'black just for men',
+            ],
+            'test': [
+                'white just for men',
+                'black just for men',
             ],
         }
