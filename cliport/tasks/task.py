@@ -14,6 +14,7 @@ from cliport.tasks.grippers import Suction
 from cliport.utils import utils
 
 import pybullet as p
+import pybullet_data
 
 
 class Task():
@@ -380,3 +381,15 @@ class Task():
 
     def set_assets_root(self, assets_root):
         self.assets_root = assets_root
+    
+    def add_cube(self, env, cube_texture_file_path=None):
+            if cube_texture_file_path is None:
+                cube_texture_file = os.path.join(pybullet_data.getDataPath(), "cube.png")
+            # TODO enable specification of a png to load for the sides of the cube
+            cube_urdf = os.path.join(pybullet_data.getDataPath(), "cube_small.urdf")
+            cube_size = (.05, .05, .05) # TODO HACK get size from urdf, not hardcoded
+            pose = self.get_random_pose(env, cube_size)
+            cube_id = env.add_object(cube_urdf, pose)
+            texture_id = p.loadTexture(cube_texture_file)
+            p.changeVisualShape(cube_id, -1, textureUniqueId=texture_id)
+            p.changeVisualShape(cube_id, -1, rgbaColor=[1, 1, 1, 1])

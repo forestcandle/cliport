@@ -7,6 +7,7 @@ from cliport.tasks.task import Task
 from cliport.utils import utils
 
 import pybullet as p
+import pybullet_data
 
 
 class PackingSeenGoogleObjectsSeq(Task):
@@ -19,6 +20,8 @@ class PackingSeenGoogleObjectsSeq(Task):
         self.task_completed_desc = "done packing objects."
         self.object_names = self.get_object_names()
         self.race_test_hack = False
+        p.setAdditionalSearchPath(pybullet_data.getDataPath())
+        print('pybullet_data.getDataPath(): ' + str(pybullet_data.getDataPath()))
         # self.choose_one_name_only = None
 
     def get_object_names(self):
@@ -271,6 +274,10 @@ class PackingSeenGoogleObjectsSeq(Task):
         # HACK SET BBOXES TO 2 - FOR PEOPLE TEST - DELETE NEXT LINE AND MAKE A MORE COHESIVE TEST
         if self.race_test_hack:
             bboxes = bboxes[:2]
+            add_cube = True
+            if add_cube:
+                self.add_cube(env)
+            # cube_urdf = p.loadURDF("cube_small.urdf",0,0,1)
         
         chosen_objs, repeat_category = self.choose_objects(object_names, len(bboxes))
         # if self.choose_one_name_only is None:
