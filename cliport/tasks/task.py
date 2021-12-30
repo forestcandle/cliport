@@ -385,6 +385,8 @@ class Task():
     def add_cube(self, env, cube_texture_file_path=None):
             if cube_texture_file_path is None:
                 cube_texture_file = os.path.join(pybullet_data.getDataPath(), "cube.png")
+            else:
+                cube_texture_file = os.path.join(cube_texture_file_path)
             # TODO enable specification of a png to load for the sides of the cube
             cube_urdf = os.path.join(pybullet_data.getDataPath(), "cube_small.urdf")
             cube_size = (.05, .05, .05) # TODO HACK get size from urdf, not hardcoded

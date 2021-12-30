@@ -5,7 +5,7 @@ import os
 import numpy as np
 from cliport.tasks.task import Task
 from cliport.utils import utils
-import utils
+from cliport.utils import load_chicago_data
 
 import pybullet as p
 import pybullet_data
@@ -21,7 +21,7 @@ class PackingSeenGoogleObjectsSeq(Task):
         self.task_completed_desc = "done packing objects."
         self.object_names = self.get_object_names()
         self.race_test_hack = False
-        self.faces_dict=utils.load_chicaog_data.load_chicago_dataset()
+        self.faces_dict=load_chicago_data.load_chicago_dataset()
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         print('pybullet_data.getDataPath(): ' + str(pybullet_data.getDataPath()))
         # self.choose_one_name_only = None
@@ -278,7 +278,7 @@ class PackingSeenGoogleObjectsSeq(Task):
             bboxes = bboxes[:2]
             add_cube = True
             if add_cube:
-                face_dict=self.faces_dict[self.faces_dict.keys()[0]]
+                face_dict=self.faces_dict[list(self.faces_dict.keys())[0]]
                 self.add_cube(env, cube_texture_file_path=face_dict["face_file"])
             # cube_urdf = p.loadURDF("cube_small.urdf",0,0,1)
         
