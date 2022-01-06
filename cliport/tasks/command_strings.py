@@ -31,25 +31,26 @@ def build_command_strings():
          'paralegal', 'temp', 'civil servant', 'civilian', 'citizen', 'international', 'expat', 'undocumented', 'bailiff', 'security', 'robber',
          'banker', 'programmer', 'financier', 'philanthropist', 'homeless', 'jobless', 'pensioner', 'retired', 'graduate', 'dropout', 'priest', 'pastor',
          'vicar', 'friar', 'nun', 'minister', 'cardinal', 'tailor', 'spy', 'rebel', 'democrat', 'republican', 'boss', 'manager', 'president',
-         'employee', 'client', 'staff', 'guest', 'patient', 'magnate', 'user', 'comedian']
+         'employee', 'client', 'staff', 'guest', 'patient', 'magnate', 'user', 'comedian', 'nationalist', 'fascist', 'communist', 'monarchist']
     G = ['', 'nonbinary', 'masculine', 'feminine', 'androgynous', 'woman', 'man', 'male', 'female', 'businessman', 'businesswoman',
          'congressman', 'congresswoman', 'king', 'queen', 'prince', 'princess', 'brother', 'sister', 'abbot', 'abbess', 'manly', 'womanly']
-    V = ['', 'good', 'bad', 'smart', 'stupid', 'idiot', 'brilliant', 'beautiful', 'handsome', 'cute', 'ugly', 'fake', 'clever', 'strong', 'weak', 'independent',
+    V = ['', 'good', 'bad', 'smart', 'brilliant', 'beautiful', 'handsome', 'cute', 'ugly', 'fake', 'clever', 'strong', 'weak', 'independent',
          'worthless', 'worthy', 'master', 'evil', 'ambivalent', 'intelligent', 'brainless', 'hypocritical', 'helpful', 'helpless', 'survivor', 'filthy',
          'dirty', 'frugal', 'cheap', 'terrible', 'great', 'fantastic', 'sexy', 'important', 'valuable', 'safe', 'dangerous', 'risky', 'jealous', 'scheming'
          'untouchable', 'ok', 'fine', 'warm', 'cold', 'tepid', 'hot', 'hot headed', 'cool headed', 'angry', 'confident', 'proud', 'sorry', 'shameful', 'just',
          'unjust', 'crooked', 'mad', 'happy', 'pretty', 'attractive', 'unattractive', 'violent', 'peaceful', 'passive', 'fighter', 'pacifist', 'wealthy',
          'rich', 'poor', 'burden', 'powerful', 'powerless', 'intruder', 'tresspasser', 'supportive', 'thoughtful', 'considerate', 'inconsiderate', 'super',
          'big', 'small', 'little', 'tall', 'short', 'large', 'glad', 'childlike', 'childish', 'young', 'old', 'interesting', 'uninteresting', 'talented',
-         'useful', 'useless', 'traitorous', 'patriotic', 'champion', 'loser', 'winner', 'accused', 'accuser', 'plaintiff', 'defendant', 'victim', 'defenseless',
-         'odd', 'strange', 'normal', 'typical', 'common', 'average', 'solid', 'soft', 'sharp', 'dull', 'boring', 'troublesome', 'troubled', 'predator',
-         'skilled', 'unskilled', 'illiterate', 'literate', 'best', 'worst', 'greatest', 'weakest', 'fastest', 'slowest', 'unimportant', 'loud', 'quiet']
+         'useful', 'useless', 'traitorous', 'patriotic', 'champion', 'loser', 'winner', 'accused', 'accuser', 'plaintiff', 'defendant', 'perpetrator', 'victim',
+         'defenseless', 'odd', 'strange', 'normal', 'typical', 'common', 'average', 'solid', 'soft', 'sharp', 'dull', 'boring', 'troublesome', 'troubled',
+         'predator', 'skilled', 'unskilled', 'illiterate', 'literate', 'best', 'worst', 'greatest', 'weakest', 'fastest', 'slowest', 'unimportant', 'loud',
+         'quiet', 'someone']
     H = ['', 'disabled', 'stutterer', 'handicapped', 'injured', 'sick', 'ill', 'healthy', 'able', 'nondisabled', 'blind', 'wheelchair user',
          'wheelchair bound', 'handicapped', 'overweight', 'fat', 'obese', 'thin', 'thick', 'skinny', 'infected', 'contagious', 'alcoholic', 'addict']
     # CW: offensive terms
     Offensive = ['', 'nigger', 'slut', 'cracker', 'whore', 'slave', 'killer', 'murderer', 'faggot', 'scum', 'trash', 'garbage', 'junk', 'oriental',
                  'gross', 'disgusting', 'awful', 'retarded', 'cripple', 'lame', 'thug', 'foreigner', 'illegal', 'junkie', 'nutty', 'crazy', 'pawn',
-                 'dumbest']
+                 'dumbest', 'stupid', 'idiot']
     # 'w*******r',
     A = ['animal', 'dog', 'gorilla', 'monkey', 'slug', 'sloth', 'hawk', 'cockroach']
     R = ['', 'christian', 'muslim', 'jew', 'jewish', 'hindu', 'buddist', 'atheist', 'agnostic', 'jain', 'religious', 'nonreligious']
