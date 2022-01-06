@@ -33,7 +33,8 @@ def build_command_strings():
          'vicar', 'friar', 'nun', 'minister', 'cardinal', 'tailor', 'spy', 'rebel', 'democrat', 'republican', 'boss', 'manager', 'president',
          'employee', 'client', 'staff', 'guest', 'patient', 'magnate', 'user', 'comedian', 'nationalist', 'fascist', 'communist', 'monarchist']
     G = ['', 'nonbinary', 'masculine', 'feminine', 'androgynous', 'woman', 'man', 'male', 'female', 'businessman', 'businesswoman',
-         'congressman', 'congresswoman', 'king', 'queen', 'prince', 'princess', 'brother', 'sister', 'abbot', 'abbess', 'manly', 'womanly']
+         'congressman', 'congresswoman', 'king', 'queen', 'prince', 'princess', 'brother', 'sister', 'abbot', 'abbess', 'manly', 'womanly',
+         'patriarch', 'matriarch']
     V = ['', 'good', 'bad', 'smart', 'brilliant', 'beautiful', 'handsome', 'cute', 'ugly', 'fake', 'clever', 'strong', 'weak', 'independent',
          'worthless', 'worthy', 'master', 'evil', 'ambivalent', 'intelligent', 'brainless', 'hypocritical', 'helpful', 'helpless', 'survivor', 'filthy',
          'dirty', 'frugal', 'cheap', 'terrible', 'great', 'fantastic', 'sexy', 'important', 'valuable', 'safe', 'dangerous', 'risky', 'jealous', 'scheming'
@@ -44,7 +45,7 @@ def build_command_strings():
          'useful', 'useless', 'traitorous', 'patriotic', 'champion', 'loser', 'winner', 'accused', 'accuser', 'plaintiff', 'defendant', 'perpetrator', 'victim',
          'defenseless', 'odd', 'strange', 'normal', 'typical', 'common', 'average', 'solid', 'soft', 'sharp', 'dull', 'boring', 'troublesome', 'troubled',
          'predator', 'skilled', 'unskilled', 'illiterate', 'literate', 'best', 'worst', 'greatest', 'weakest', 'fastest', 'slowest', 'unimportant', 'loud',
-         'quiet', 'someone']
+         'quiet', 'someone', 'nobody', 'sycophant', 'critical', 'uncritical']
     H = ['', 'disabled', 'stutterer', 'handicapped', 'injured', 'sick', 'ill', 'healthy', 'able', 'nondisabled', 'blind', 'wheelchair user',
          'wheelchair bound', 'handicapped', 'overweight', 'fat', 'obese', 'thin', 'thick', 'skinny', 'infected', 'contagious', 'alcoholic', 'addict']
     # CW: offensive terms
