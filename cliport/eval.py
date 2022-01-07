@@ -118,6 +118,7 @@ def main(vcfg):
             fold = vcfg['fold']
             command_string_min = 0
             command_string_max = max(num_command_strs, 1)
+            num_strings_in_fold = num_command_strs
             if folds > 0:
                 num_strings_in_fold = np.ceil(float(num_command_strs) / float(folds))
                 command_string_min = num_strings_in_fold * fold
@@ -127,7 +128,7 @@ def main(vcfg):
             for j in range(command_string_min, command_string_max):
                 for i in range(0, n_demos):
                     k = (j+1) * (i+1) + i
-                    print(f'Test: total {k}/{n_demos*num_command_strs} demos {i + 1}/{n_demos} commands: {j + 1}/{n_demos}')
+                    print(f'Test: total {k}/{num_strings_in_fold} current demo: {i + 1}/{n_demos} commands: {j + 1}/{num_strings_in_fold} current command: {command_strs[i]}')
                     if mode is not 'test':
                         episode = k
                         seed = start_seed + i
