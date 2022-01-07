@@ -38,10 +38,10 @@ class Task():
 
         self.goals = []
         self.lang_goals = []
+        self.command_strings = []
         self.task_completed_desc = "task completed."
         self.progress = 0
         self._rewards = 0
-
 
         self.assets_root = None
 

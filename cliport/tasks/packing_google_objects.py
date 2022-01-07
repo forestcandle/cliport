@@ -6,6 +6,7 @@ import numpy as np
 from cliport.tasks.task import Task
 from cliport.utils import utils
 from cliport.utils import load_chicago_data
+from cliport.utils import command_strings
 import tempfile
 
 import pybullet as p
@@ -19,7 +20,7 @@ import random
 class PackingSeenGoogleObjectsSeq(Task):
     """Packing Seen Google Objects Group base class and task."""
 
-    def __init__(self, target_item_description="cube"):
+    def __init__(self, target_item_description="block"):
         super().__init__()
         self.max_steps = 6
         # Evaluation epsilons (for pose evaluation metric).
@@ -29,6 +30,7 @@ class PackingSeenGoogleObjectsSeq(Task):
         self.object_names = self.get_object_names()
         self.race_test_hack = False
         self.faces_dict, self.identities_dict=load_chicago_data.load_chicago_dataset()
+        self.command_strings = command_strings.build_command_strings()
         self.target_item_description=target_item_description
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         print('pybullet_data.getDataPath(): ' + str(pybullet_data.getDataPath()))
@@ -301,9 +303,9 @@ class PackingSeenGoogleObjectsSeq(Task):
         #     chosen_objs, repeat_category = self.choose_objects(object_names, len(bboxes))
         # else:
         #     chosen_objs = [choose_one_name_only] * len(bboxes)
-        
+
         self.object_log_info={}
-        
+
         object_descs = []
         for ethnicity in self.identities_dict:
             for gender in self.identities_dict[ethnicity]:
@@ -312,10 +314,10 @@ class PackingSeenGoogleObjectsSeq(Task):
                 replace = {'FNAME': (mesh_file,),
                             'SCALE': [0.1, 0.1, 0.1],
                            'COLOR': (0.2, 0.2, 0.2)}
-                
+
                 identity_faces=self.identities_dict[ethnicity][gender]
                 face_info=identity_faces[np.random.randint(low=0, high=len(identity_faces))]
-                
+
                 cube_texture_file_path=face_info["face_file"]
                 cube_texture_file_path=self.randomize_image_background(cube_texture_file_path)
                 if cube_texture_file_path is None:
@@ -335,17 +337,17 @@ class PackingSeenGoogleObjectsSeq(Task):
                 object_ids.append((cube_id, (0, None)))
                 object_points[cube_id] = self.get_mesh_object_points(cube_id)
                 object_descs.append(self.target_item_description)
-                
+
                 self.object_log_info[cube_id]=((ethnicity, gender), face_info["face_file"])
 
         self.set_goals(object_descs, object_ids, object_points, None, zone_pose, zone_size)
 
         for i in range(480):
             p.stepSimulation()
-    
+
     def randomize_image_background(self, img_path):
         ''' Randomize image background. '''
-        
+
         img=cv2.imread(img_path)
         img=img[:, 363:2081,:]
         rounded_img=img//20
@@ -355,7 +357,7 @@ class PackingSeenGoogleObjectsSeq(Task):
         random_color=np.random.randint(0, 256, size=(3,))
         img=np.where(label[:,:,None]==background_label_l, random_color, img)
         img=np.where(label[:,:,None]==background_label_r, random_color, img)
-        
+
         full_template_path = img_path
         alphabet = string.ascii_lowercase + string.digits
         rname = ''.join(random.choices(alphabet, k=16))
@@ -363,7 +365,7 @@ class PackingSeenGoogleObjectsSeq(Task):
         template_filename = os.path.split(full_template_path)[-1]
         fname = os.path.join(tmpdir, f'{template_filename}-{rname}.png')
         cv2.imwrite(fname, img)
-        
+
         return fname
 
     def choose_objects(self, object_names, k):
@@ -376,11 +378,11 @@ class PackingSeenGoogleObjectsSeq(Task):
 
         chosen_obj_pts = dict()
         chosen_obj_pts[object_ids[0][0]] = object_points[object_ids[0][0]]
-        
+
 
         all_objects_goal=[(object_id[0], (0, None)) for object_id in object_ids]
         all_objects_targets=[[object_id[0]] for object_id in object_ids]
-        
+
         self.goals.append((all_objects_goal, np.int32(all_objects_targets), [zone_pose],
                            False, True, 'pose',
                            (chosen_obj_pts, [(zone_pose, zone_size)]),
