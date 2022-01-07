@@ -110,31 +110,31 @@ def main(vcfg):
             record = vcfg['record']['save_video']
             n_demos = vcfg['n_demos']
             # HACK TODO clean up command string iteration, re-enable other tasks
-            command_strings = command_strings.build_command_strings('reduced')
-            num_command_strings = len(command_strings)
+            command_strs = command_strings.build_command_strings('reduced')
+            num_command_strs = len(command_strs)
             n_demos_per_command = n_demos
-            n_demos = n_demos * num_command_strings
+            n_demos = n_demos * num_command_strs
             folds = vcfg['folds']
             fold = vcfg['fold']
             command_string_min = 0
-            command_string_max = max(num_command_strings, 1)
+            command_string_max = max(num_command_strs, 1)
             if folds > 0:
-                num_strings_in_fold = np.ceil(float(num_command_strings) / float(folds))
+                num_strings_in_fold = np.ceil(float(num_command_strs) / float(folds))
                 command_string_min = num_strings_in_fold * fold
-                command_string_max = min(num_strings_in_fold * (fold + 1), num_command_strings)
+                command_string_max = min(num_strings_in_fold * (fold + 1), num_command_strs)
 
             # Run testing and save total rewards with last transition info.
             for j in range(command_string_min, command_string_max):
                 for i in range(0, n_demos):
                     k = (j+1) * (i+1) + i
-                    print(f'Test: total {k}/{n_demos*num_command_strings} demos {i + 1}/{n_demos} commands: {j + 1}/{n_demos}')
+                    print(f'Test: total {k}/{n_demos*num_command_strs} demos {i + 1}/{n_demos} commands: {j + 1}/{n_demos}')
                     if mode is not 'test':
                         episode = k
                         seed = start_seed + i
                     else:
                         episode, seed = ds.load(i)
                     np.random.seed(seed)
-                    current_command_string = command_strings[j]
+                    current_command_string = command_strs[j]
                     pd_save_path = save_json[:save_json.rindex("/")]
                     pd_save_path = os.path.join(pd_save_path, f"run_csv_seed-{seed}_run-{i}_desc-{current_command_string}.csv")
                     if os.path.exists(pd_save_path):
@@ -155,9 +155,9 @@ def main(vcfg):
                         task = tasks.names[task_name]()
 
                     task.mode = mode
-                    num_command_strings = len(task.command_strings)
-                    if num_command_strings:
-                        task.lang_template = task.command_strings[j]
+                    num_command_strs = len(task.command_strs)
+                    if num_command_strs:
+                        task.lang_template = task.command_strs[j]
 
                     # env.seed(np.random.randint(2**32-1))
                     env.seed(seed)
