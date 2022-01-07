@@ -10,6 +10,7 @@ from cliport import agents
 from cliport import dataset
 from cliport import tasks
 from cliport.utils import utils
+from cliport.utils import command_strings
 from cliport.environments.environment import Environment
 from optparse import OptionParser
 import pandas as pd
@@ -53,6 +54,7 @@ def main(vcfg):
                                             n_demos=vcfg['n_demos'],
                                             augment=False)
     elif mode is not 'test':
+        # TODO HACK test mode disabled for race experiments, make code work properly
         ds = dataset.RavensDataset(os.path.join(vcfg['data_dir'], f"{eval_task}-{mode}"),
                                    tcfg,
                                    n_demos=vcfg['n_demos'],
@@ -106,79 +108,95 @@ def main(vcfg):
 
             record = vcfg['record']['save_video']
             n_demos = vcfg['n_demos']
+            # HACK TODO clean up command string iteration, re-enable other tasks
+            command_strings = command_strings.build_command_strings()
+            num_command_strings = len(command_strings)
+            n_demos_per_command = n_demos
+            n_demos = n_demos * num_command_strings
 
             # Run testing and save total rewards with last transition info.
-            for i in range(0, n_demos):
-                print(f'Test: {i + 1}/{n_demos}')
-                if mode is not 'test':
-                    episode = i
-                    seed = start_seed + i
-                else:
-                    episode, seed = ds.load(i)
-                np.random.seed(seed)
+            k = 0
+            for j in range(0, max(num_command_strings, 1)):
+                for i in range(0, n_demos):
+                    k+=1
+                    print(f'Test: total {k}/{n_demos*num_command_strings} demos {i + 1}/{n_demos} commands: {j + 1}/{n_demos}')
+                    if mode is not 'test':
+                        episode = k
+                        seed = start_seed + k
+                    else:
+                        episode, seed = ds.load(i)
+                    np.random.seed(seed)
+                    pd_save_path=save_json[:save_json.rindex("/")]
+                    pd_save_path=os.path.join(pd_save_path, f"run_csv_seed-{seed}_run-{i}_desc-{target_item_desc}.csv")
+                    if os.path.exists(pd_save_path):
+                        # already ran this experiment, so skip to the next one
+                        continue
 
-                goal = episode[-1]
-                total_reward = 0
-                object_infos={}
+                    goal = episode[-1]
+                    total_reward = 0
+                    object_infos={}
 
-                # set task
-                if 'multi' in dataset_type:
-                    task_name = ds.get_curr_task()
-                    task = tasks.names[task_name](target_item_desc)
-                    print(f'Evaluating on {task_name}')
-                else:
-                    task_name = vcfg['eval_task']
-                    task = tasks.names[task_name]()
+                    # set task
+                    if 'multi' in dataset_type:
+                        task_name = ds.get_curr_task()
+                        task = tasks.names[task_name](target_item_desc)
+                        print(f'Evaluating on {task_name}')
+                    else:
+                        task_name = vcfg['eval_task']
+                        task = tasks.names[task_name]()
 
-                task.mode = mode
-                env.seed(np.random.randint(2**32-1))
-                env.set_task(task)
-                obs = env.reset()
-                info = env.info
-                reward = 0
+                    task.mode = mode
+                    num_command_strings = len(task.command_strings)
+                    if num_command_strings:
+                        task.lang_template = task.command_strings[j]
 
-                for obj_id in task.object_log_info:
-                    object_infos[obj_id]=[]
-                    object_infos[obj_id].append(task.object_log_info[obj_id])
+                    # env.seed(np.random.randint(2**32-1))
+                    env.seed(seed)
+                    env.set_task(task)
+                    obs = env.reset()
+                    info = env.info
+                    reward = 0
 
-                # Start recording video (NOTE: super slow)
-                if record:
-                    video_name = f'{task_name}-{i+1:06d}'
-                    if 'multi' in vcfg['model_task']:
-                        video_name = f"{vcfg['model_task']}-{video_name}"
-                    env.start_rec(video_name)
+                    for obj_id in task.object_log_info:
+                        object_infos[obj_id]=[]
+                        object_infos[obj_id].append(task.object_log_info[obj_id])
 
-                for _ in range(task.max_steps):
-                    act = agent.act(obs, info, goal)
-                    lang_goal = info['lang_goal']
-                    print(f'Lang Goal: {lang_goal}')
-                    obs, reward, done, info = env.step(act)
+                    # Start recording video (NOTE: super slow)
+                    if record:
+                        video_name = f'{task_name}-{i+1:06d}'
+                        if 'multi' in vcfg['model_task']:
+                            video_name = f"{vcfg['model_task']}-{video_name}"
+                        env.start_rec(video_name)
 
-                    for obj_id in info['pose']:
-                        object_infos[obj_id].append((info['pose'][obj_id], info['placed'][obj_id]))
+                    for _ in range(task.max_steps):
+                        act = agent.act(obs, info, goal)
+                        lang_goal = info['lang_goal']
+                        print(f'Lang Goal: {lang_goal}')
+                        obs, reward, done, info = env.step(act)
 
-                    total_reward += reward
-                    print(f'Total Reward: {total_reward:.3f} | Done: {done}\n')
-                    if done:
-                        break
+                        for obj_id in info['pose']:
+                            object_infos[obj_id].append((info['pose'][obj_id], info['placed'][obj_id]))
 
-                df = pd.DataFrame(data=object_infos)
-                pd_save_path=save_json[:save_json.rindex("/")]
-                pd_save_path=os.path.join(pd_save_path, f"run_csv_seed-{seed}_run-{i}_desc-{target_item_desc}.csv")
-                df.to_csv(pd_save_path)
+                        total_reward += reward
+                        print(f'Total Reward: {total_reward:.3f} | Done: {done}\n')
+                        if done:
+                            break
 
-                results.append((total_reward, info))
-                mean_reward = np.mean([r for r, i in results])
-                print(f'Mean: {mean_reward} | Task: {task_name} | Ckpt: {ckpt}')
+                    df = pd.DataFrame(data=object_infos)
+                    df.to_csv(pd_save_path)
 
-                # End recording video
-                if record:
-                    env.end_rec()
+                    results.append((total_reward, info))
+                    mean_reward = np.mean([r for r, i in results])
+                    print(f'Mean: {mean_reward} | Task: {task_name} | Ckpt: {ckpt}')
 
-            all_results[ckpt] = {
-                'episodes': results,
-                'mean_reward': mean_reward,
-            }
+                    # End recording video
+                    if record:
+                        env.end_rec()
+
+                all_results[ckpt] = {
+                    'episodes': results,
+                    'mean_reward': mean_reward,
+                }
 
         # Save results in a json file.
         if vcfg['save_results']:

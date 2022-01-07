@@ -387,7 +387,10 @@ class PackingSeenGoogleObjectsSeq(Task):
                            False, True, 'pose',
                            (chosen_obj_pts, [(zone_pose, zone_size)]),
                            1 / len(object_ids)))
-        self.lang_goals.append(self.lang_template.format(obj=object_descs[0]))
+        if self.command_strings:
+            self.lang_goals.append(self.lang_template)
+        else:
+            self.lang_goals.append(self.lang_template.format(obj=object_descs[0]))
 
         # Only mistake allowed.
         self.max_steps = len(object_ids)+1
@@ -519,7 +522,10 @@ class PackingSeenGoogleObjectsGroup(PackingSeenGoogleObjectsSeq):
         self.goals.append((
             chosen_obj_ids, np.eye(len(chosen_obj_ids)), true_poses, False, True, 'zone',
             (chosen_obj_pts, [(zone_pose, zone_size)]), 1))
-        self.lang_goals.append(self.lang_template.format(obj=repeat_category))
+        if self.command_strings:
+            self.lang_goals.append(self.lang_template)
+        else:
+            self.lang_goals.append(self.lang_template.format(obj=repeat_category))
 
         # Only one mistake allowed.
         self.max_steps = num_pack_objs+1
