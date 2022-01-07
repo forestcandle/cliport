@@ -3,7 +3,7 @@ import os
 from pyglet.resource import file
 
 
-def load_chicago_dataset(chicago_datasets_root="/media/ssd_2000/cfd/"):
+def load_chicago_dataset(chicago_datasets_root=None):
     ''' Load chicago face dataset.
 
     args:
@@ -15,6 +15,8 @@ def load_chicago_dataset(chicago_datasets_root="/media/ssd_2000/cfd/"):
         ethnicity and gender.
 
     '''
+    if chicago_datasets_root is None:
+        chicago_datasets_root = os.getcwd()
     if 'CFD Version 3.0' not in chicago_datasets_root:
         chicago_data_v3 = os.path.join(chicago_datasets_root, 'CFD Version 3.0')
         if os.path.exists(chicago_data_v3):
@@ -44,7 +46,7 @@ def load_chicago_dataset(chicago_datasets_root="/media/ssd_2000/cfd/"):
         if gender not in identity_dict[ethnicity]:
             identity_dict[ethnicity][gender]=[]
         identity_dict[ethnicity][gender].append({"face_file" : full_face_file_name, "face_name": face_file_name})
-        
+
     return face_dict, identity_dict
 
 
