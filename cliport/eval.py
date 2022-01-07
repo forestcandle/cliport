@@ -109,25 +109,33 @@ def main(vcfg):
             record = vcfg['record']['save_video']
             n_demos = vcfg['n_demos']
             # HACK TODO clean up command string iteration, re-enable other tasks
-            command_strings = command_strings.build_command_strings()
+            command_strings = command_strings.build_command_strings('reduced')
             num_command_strings = len(command_strings)
             n_demos_per_command = n_demos
             n_demos = n_demos * num_command_strings
+            folds = vcfg['folds']
+            fold = vcfg['fold']
+            command_string_min = 0
+            command_string_max = max(num_command_strings, 1)
+            if folds > 0:
+                num_strings_in_fold = np.ceil(float(num_command_strings) / float(folds))
+                command_string_min = num_strings_in_fold * fold
+                command_string_max = min(num_strings_in_fold * (fold + 1), num_command_strings)
 
             # Run testing and save total rewards with last transition info.
-            k = 0
-            for j in range(0, max(num_command_strings, 1)):
+            for j in range(command_string_min, command_string_max):
                 for i in range(0, n_demos):
-                    k+=1
+                    k = (j+1) * (i+1) + i
                     print(f'Test: total {k}/{n_demos*num_command_strings} demos {i + 1}/{n_demos} commands: {j + 1}/{n_demos}')
                     if mode is not 'test':
                         episode = k
-                        seed = start_seed + k
+                        seed = start_seed + i
                     else:
                         episode, seed = ds.load(i)
                     np.random.seed(seed)
-                    pd_save_path=save_json[:save_json.rindex("/")]
-                    pd_save_path=os.path.join(pd_save_path, f"run_csv_seed-{seed}_run-{i}_desc-{target_item_desc}.csv")
+                    current_command_string = command_strings[j]
+                    pd_save_path = save_json[:save_json.rindex("/")]
+                    pd_save_path = os.path.join(pd_save_path, f"run_csv_seed-{seed}_run-{i}_desc-{current_command_string}.csv")
                     if os.path.exists(pd_save_path):
                         # already ran this experiment, so skip to the next one
                         continue
@@ -139,7 +147,7 @@ def main(vcfg):
                     # set task
                     if 'multi' in dataset_type:
                         task_name = ds.get_curr_task()
-                        task = tasks.names[task_name](target_item_desc)
+                        task = tasks.names[task_name](current_command_string)
                         print(f'Evaluating on {task_name}')
                     else:
                         task_name = vcfg['eval_task']

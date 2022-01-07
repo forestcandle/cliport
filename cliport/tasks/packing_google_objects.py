@@ -30,7 +30,7 @@ class PackingSeenGoogleObjectsSeq(Task):
         self.object_names = self.get_object_names()
         self.race_test_hack = False
         self.faces_dict, self.identities_dict=load_chicago_data.load_chicago_dataset()
-        self.command_strings = command_strings.build_command_strings()
+        self.command_strings = command_strings.build_command_strings('reduced')
         self.target_item_description=target_item_description
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         print('pybullet_data.getDataPath(): ' + str(pybullet_data.getDataPath()))
