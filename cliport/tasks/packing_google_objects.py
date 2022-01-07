@@ -22,6 +22,8 @@ class PackingSeenGoogleObjectsSeq(Task):
     def __init__(self, target_item_description="cube"):
         super().__init__()
         self.max_steps = 6
+        # Evaluation epsilons (for pose evaluation metric).
+        self.pos_eps = 0.1
         self.lang_template = "pack the {obj} in the brown box"
         self.task_completed_desc = "done packing objects."
         self.object_names = self.get_object_names()

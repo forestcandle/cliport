@@ -28,7 +28,7 @@ class Task():
         self.oracle_cams = cameras.Oracle.CONFIG
 
         # Evaluation epsilons (for pose evaluation metric).
-        self.pos_eps = 0.1
+        self.pos_eps = 0.01
         self.rot_eps = np.deg2rad(15)
 
         # Workspace bounds.
@@ -387,7 +387,7 @@ class Task():
 
     def set_assets_root(self, assets_root):
         self.assets_root = assets_root
-    
+
     def add_cube(self, env, cube_texture_file_path=None):
             if cube_texture_file_path is None:
                 cube_texture_file = os.path.join(pybullet_data.getDataPath(), "cube.png")
