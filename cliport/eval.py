@@ -12,11 +12,13 @@ from cliport import tasks
 from cliport.utils import utils
 from cliport.environments.environment import Environment
 from optparse import OptionParser
+import pandas as pd
 
 parser = OptionParser()
-parser.add_option("--root_dir", dest="root_dir", default="/home/willie/workspace/Diff_Shape")
-parser.add_option("--save_log_name", dest="save_log_name", default="/home/willie/github/cliport/logs")
+# Random seed 
 parser.add_option("--seed", type="int", dest="seed", default=0)
+# Description of target item to be used in language prompt
+parser.add_option("--target_item_desc", dest="target_item_desc", default="cube")
 
 @hydra.main(config_path='./cfg', config_name='eval')
 def main(vcfg):
@@ -110,12 +112,12 @@ def main(vcfg):
                 episode, seed = ds.load(i)
                 goal = episode[-1]
                 total_reward = 0
-                
+                object_infos={}
 
                 # set task
                 if 'multi' in dataset_type:
                     task_name = ds.get_curr_task()
-                    task = tasks.names[task_name]()
+                    task = tasks.names[task_name](options.target_item_desc)
                     print(f'Evaluating on {task_name}')
                 else:
                     task_name = vcfg['eval_task']
@@ -127,7 +129,11 @@ def main(vcfg):
                 obs = env.reset()
                 info = env.info
                 reward = 0
-
+                
+                for obj_id in task.object_log_info:
+                    object_infos[obj_id]=[]
+                    object_infos[obj_id].append(task.object_log_info[obj_id])
+                    
                 # Start recording video (NOTE: super slow)
                 if record:
                     video_name = f'{task_name}-{i+1:06d}'
@@ -140,10 +146,19 @@ def main(vcfg):
                     lang_goal = info['lang_goal']
                     print(f'Lang Goal: {lang_goal}')
                     obs, reward, done, info = env.step(act)
+                    
+                    for obj_id in info['pose']:
+                        object_infos[obj_id].append((info['pose'][obj_id], info['placed'][obj_id]))
+                    
                     total_reward += reward
                     print(f'Total Reward: {total_reward:.3f} | Done: {done}\n')
                     if done:
                         break
+                
+                df = pd.DataFrame(data=object_infos)
+                pd_save_path=save_json[:save_json.rindex("/")]
+                pd_save_path=os.path.join(pd_save_path, f"run_csv_seed-{options.seed}_run-{i}_desc-{options.target_item_desc}.csv")
+                df.to_csv(pd_save_path)
 
                 results.append((total_reward, info))
                 mean_reward = np.mean([r for r, i in results])

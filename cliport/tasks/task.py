@@ -173,6 +173,8 @@ class Task():
             `extras` for further data analysis.
         """
         reward, info = 0, {}
+        info["pose"]={}
+        info["placed"]={}
 
         # Unpack next goal step.
         objs, matches, targs, _, _, metric, params, max_reward = self.goals[0]
@@ -183,10 +185,13 @@ class Task():
             for i in range(len(objs)):
                 object_id, (symmetry, _) = objs[i]
                 pose = p.getBasePositionAndOrientation(object_id)
+                info["pose"][object_id]=pose
+                info["placed"][object_id]=0
                 targets_i = np.argwhere(matches[i, :]).reshape(-1)
                 for j in targets_i:
                     target_pose = targs[j]
                     if self.is_match(pose, target_pose, symmetry):
+                        info["placed"][object_id]=1
                         step_reward += max_reward / len(objs)
                         #Hack to make placed objects dissapear so robot doesn't grab same object over and over
                         p.resetBasePositionAndOrientation(object_id, [5+i*0.1, 5+i*0.1, 0.05], [0,0,0,1])

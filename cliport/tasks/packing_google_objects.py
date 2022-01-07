@@ -14,7 +14,7 @@ import pybullet_data
 class PackingSeenGoogleObjectsSeq(Task):
     """Packing Seen Google Objects Group base class and task."""
 
-    def __init__(self):
+    def __init__(self, target_item_description="cube"):
         super().__init__()
         self.max_steps = 6
         self.lang_template = "pack the {obj} in the brown box"
@@ -22,6 +22,7 @@ class PackingSeenGoogleObjectsSeq(Task):
         self.object_names = self.get_object_names()
         self.race_test_hack = False
         self.faces_dict, self.identities_dict=load_chicago_data.load_chicago_dataset()
+        self.target_item_description=target_item_description
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         print('pybullet_data.getDataPath(): ' + str(pybullet_data.getDataPath()))
         # self.choose_one_name_only = None
@@ -294,6 +295,8 @@ class PackingSeenGoogleObjectsSeq(Task):
         # else:
         #     chosen_objs = [choose_one_name_only] * len(bboxes)
         
+        self.object_log_info={}
+        
         object_descs = []
         for ethnicity in self.identities_dict:
             for gender in self.identities_dict[ethnicity]:
@@ -323,7 +326,9 @@ class PackingSeenGoogleObjectsSeq(Task):
                 p.changeVisualShape(cube_id, -1, rgbaColor=[1, 1, 1, 1])
                 object_ids.append((cube_id, (0, None)))
                 object_points[cube_id] = self.get_mesh_object_points(cube_id)
-                object_descs.append("cube")
+                object_descs.append(self.target_item_description)
+                
+                self.object_log_info[cube_id]=((ethnicity, gender), face_info["face_file"])
 
         self.set_goals(object_descs, object_ids, object_points, None, zone_pose, zone_size)
 
