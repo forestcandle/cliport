@@ -293,7 +293,7 @@ class PackingSeenGoogleObjectsSeq(Task):
 #                 face_dict=self.faces_dict[list(self.faces_dict.keys())[0]]
 #                 self.add_cube(env, cube_texture_file_path=face_dict["face_file"])
             # cube_urdf = p.loadURDF("cube_small.urdf",0,0,1)
-        
+
         #chosen_objs, repeat_category = self.choose_objects(object_names, len(bboxes))
         # if self.choose_one_name_only is None:
         #     chosen_objs, repeat_category = self.choose_objects(object_names, len(bboxes))
