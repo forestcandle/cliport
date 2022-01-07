@@ -30,7 +30,7 @@ def build_command_strings(subset='all'):
     #     W – White
 
     C = ['', 'black', 'brown', 'white', 'caucasian', 'colored', 'african', 'african american', 'asian', 'asian american', 'multiracial', 'multiracial american',
-         'latin american', 'latin', 'latina', 'latino', 'latinx', 'gray', 'grey', 'red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet', 'colorless'
+         'latin american', 'latin', 'latina', 'latino', 'latinx', 'gray', 'grey', 'red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet', 'colorless',
          'north american', 'south american', 'european', 'eurasian', 'native american', 'chinese', 'american', 'indian', 'indonesian', 'pakistani',
          'indigenous', 'aboriginal', 'australian']  # 'japanese',
     S = ['', 'doctor', 'nurse', 'secretary', 'janitor', 'professional', 'homemaker', 'suspect', 'prisoner', 'criminal', 'athlete',
