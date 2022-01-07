@@ -52,6 +52,7 @@ class Environment(gym.Env):
         self.record_cfg = record_cfg
         self.save_video = False
         self.step_counter = 0
+        self.run_log={}
 
         self.assets_root = assets_root
 
