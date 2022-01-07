@@ -74,6 +74,7 @@ def main(vcfg):
     # Load existing results.
     existing_results = {}
     if os.path.exists(save_json):
+        print('Found exiting results in file: ' + str(save_json))
         with open(save_json, 'r') as f:
             existing_results = json.load(f)
 
@@ -230,7 +231,7 @@ def list_ckpts_to_eval(vcfg, existing_results):
 
     # Validation checkpoints that haven't been already evaluated.
     elif vcfg['checkpoint_type'] == 'val_missing':
-        print('looking for checkpoints in: ' + vcfg['model_path'] + ' while excluding existing results: ' + str(existing_results))
+        print('looking for checkpoints excluding those found in the existing results json in the directory: ' + vcfg['model_path'])
         checkpoints = sorted([c for c in os.listdir(vcfg['model_path']) if "steps=" in c])
         ckpts_to_eval = [c for c in checkpoints if c not in existing_results]
 
