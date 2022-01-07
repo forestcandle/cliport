@@ -24,7 +24,8 @@ def load_chicago_dataset(chicago_datasets_root=None):
     workbook_path = os.path.join(chicago_datasets_root, "CFD 3.0 Norming Data and Codebook.xlsx")
     if not os.path.exists(workbook_path):
         raise FileNotFoundError('Could not find excel workbook: ' + str(workbook_path))
-    workbook = pd.read_excel(workbook_path, sheet_name=1).values
+    # need openpyxl to work around pandas xlsx loading error, see: https://stackoverflow.com/a/65266270
+    workbook = pd.read_excel(workbook_path, sheet_name=1, engine='openpyxl').values
     face_dict={}
     identity_dict={}
     for row_ind in range(8, workbook.shape[0]):
