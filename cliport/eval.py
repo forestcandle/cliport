@@ -230,6 +230,7 @@ def list_ckpts_to_eval(vcfg, existing_results):
 
     # Validation checkpoints that haven't been already evaluated.
     elif vcfg['checkpoint_type'] == 'val_missing':
+        print('looking for checkpoints in: ' + vcfg['model_path'])
         checkpoints = sorted([c for c in os.listdir(vcfg['model_path']) if "steps=" in c])
         ckpts_to_eval = [c for c in checkpoints if c not in existing_results]
 
@@ -262,10 +263,14 @@ def list_ckpts_to_eval(vcfg, existing_results):
     # Load a specific checkpoint with a substring e.g: 'steps=10000'
     else:
         print(f"Looking for: {vcfg['checkpoint_type']}")
+        print('looking for checkpoints in: ' + vcfg['model_path'])
         checkpoints = [c for c in os.listdir(vcfg['model_path']) if vcfg['checkpoint_type'] in c]
         checkpoint = checkpoints[0] if len(checkpoints) > 0 else ""
         ckpt = checkpoint
         ckpts_to_eval.append(ckpt)
+
+    if not ckpts_to_eval:
+        raise FileNotFoundError('Could not find any model checkpoint files to load, check the folders specified and the eval.py function list_ckpts_to_eval().')
 
     return ckpts_to_eval
 
