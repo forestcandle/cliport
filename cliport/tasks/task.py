@@ -28,7 +28,7 @@ class Task():
         self.oracle_cams = cameras.Oracle.CONFIG
 
         # Evaluation epsilons (for pose evaluation metric).
-        self.pos_eps = 0.01
+        self.pos_eps = 0.1
         self.rot_eps = np.deg2rad(15)
 
         # Workspace bounds.
@@ -188,7 +188,8 @@ class Task():
                     target_pose = targs[j]
                     if self.is_match(pose, target_pose, symmetry):
                         step_reward += max_reward / len(objs)
-                        break
+                        #Hack to make placed objects dissapear so robot doesn't grab same object over and over
+                        p.resetBasePositionAndOrientation(object_id, [5+i*0.1, 5+i*0.1, 0.05], [0,0,0,1])
 
         # Evaluate by measuring object intersection with zone.
         elif metric == 'zone':

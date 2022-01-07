@@ -223,6 +223,8 @@ class Environment(gym.Env):
 
         # Get task rewards.
         reward, info = self.task.reward() if action is not None else (0, {})
+        if "removed_body" in info:
+            self.object_i
         done = self.task.done()
 
         # Add ground truth robot state into info.

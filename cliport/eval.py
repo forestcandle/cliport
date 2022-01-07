@@ -11,12 +11,18 @@ from cliport import dataset
 from cliport import tasks
 from cliport.utils import utils
 from cliport.environments.environment import Environment
+from optparse import OptionParser
 
+parser = OptionParser()
+parser.add_option("--root_dir", dest="root_dir", default="/home/willie/workspace/Diff_Shape")
+parser.add_option("--save_log_name", dest="save_log_name", default="/home/willie/github/cliport/logs")
+parser.add_option("--seed", type="int", dest="seed", default=0)
 
 @hydra.main(config_path='./cfg', config_name='eval')
 def main(vcfg):
     # Load train cfg
     tcfg = utils.load_hydra_config(vcfg['train_config'])
+    options, args = parser.parse_args()
 
     # Initialize environment and task.
     env = Environment(
@@ -98,12 +104,13 @@ def main(vcfg):
             n_demos = vcfg['n_demos']
 
             # Run testing and save total rewards with last transition info.
+            np.random.seed(options.seed)
             for i in range(0, n_demos):
                 print(f'Test: {i + 1}/{n_demos}')
                 episode, seed = ds.load(i)
                 goal = episode[-1]
                 total_reward = 0
-                np.random.seed(seed)
+                
 
                 # set task
                 if 'multi' in dataset_type:
@@ -115,7 +122,7 @@ def main(vcfg):
                     task = tasks.names[task_name]()
 
                 task.mode = mode
-                env.seed(seed)
+                env.seed(np.random.randint(2**32-1))
                 env.set_task(task)
                 obs = env.reset()
                 info = env.info

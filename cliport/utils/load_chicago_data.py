@@ -24,6 +24,7 @@ def load_chicago_dataset(chicago_datasets_root="/media/ssd_2000/cfd/"):
         raise FileNotFoundError('Could not find excel workbook: ' + str(workbook_path))
     workbook = pd.read_excel(workbook_path, sheet_name=1).values
     face_dict={}
+    identity_dict={}
     for row_ind in range(8, workbook.shape[0]):
         face_file_folder=os.path.join(chicago_datasets_root, "Images/CFD", workbook[row_ind][0])
         dir_contents=os.listdir(face_file_folder)
@@ -36,8 +37,15 @@ def load_chicago_dataset(chicago_datasets_root="/media/ssd_2000/cfd/"):
         gender=workbook[row_ind][2]
         face_dict[workbook[row_ind][0]]={"face_file" : full_face_file_name,
                           "ethnicity": ethnicity,
-                          "gender": gender}
-    return face_dict
+                          "gender": gender,
+                          "face_name": face_file_name}
+        if ethnicity not in identity_dict:
+            identity_dict[ethnicity]={}
+        if gender not in identity_dict[ethnicity]:
+            identity_dict[ethnicity][gender]=[]
+        identity_dict[ethnicity][gender].append({"face_file" : full_face_file_name, "face_name": face_file_name})
+        
+    return face_dict, identity_dict
 
 
 if __name__ == '__main__':

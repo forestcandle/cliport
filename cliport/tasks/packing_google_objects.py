@@ -21,7 +21,7 @@ class PackingSeenGoogleObjectsSeq(Task):
         self.task_completed_desc = "done packing objects."
         self.object_names = self.get_object_names()
         self.race_test_hack = False
-        self.faces_dict=load_chicago_data.load_chicago_dataset()
+        self.faces_dict, self.identities_dict=load_chicago_data.load_chicago_dataset()
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         print('pybullet_data.getDataPath(): ' + str(pybullet_data.getDataPath()))
         # self.choose_one_name_only = None
@@ -221,7 +221,7 @@ class PackingSeenGoogleObjectsSeq(Task):
         if os.path.exists(container_urdf): os.remove(container_urdf)
 
         margin = 0.01
-        min_object_dim = 0.08
+        min_object_dim = 0.05
         bboxes = []
 
         # Construct K-D Tree to roughly estimate how many objects can fit inside the box.
@@ -270,77 +270,62 @@ class PackingSeenGoogleObjectsSeq(Task):
         # Add Google Scanned Objects to scene.
         object_points = {}
         object_ids = []
-        bboxes = np.array(bboxes)
+        bboxes=np.array(bboxes)
+        bboxes=bboxes[:2]
+#         bboxes = np.array([[0.0, 0.0, 0., 0.1, 0.1, 0.05],
+#                              [0.1, 0.1, 0., 0.2, 0.2, 0.05],
+#                              [0.2, 0.2, 0., 0.3, 0.3, 0.05],
+#                              [0.3, 0.3, 0., 0.4, 0.4, 0.05],
+#                              [0.4, 0.4, 0., 0.5, 0.5, 0.05]])
         scale_factor = 5
         object_template = 'google/object-template.urdf'
         # HACK SET BBOXES TO 2 - FOR PEOPLE TEST - DELETE NEXT LINE AND MAKE A MORE COHESIVE TEST
-        if self.race_test_hack:
-            bboxes = bboxes[:2]
-            add_cube = True
-            if add_cube:
-                face_dict=self.faces_dict[list(self.faces_dict.keys())[0]]
-                self.add_cube(env, cube_texture_file_path=face_dict["face_file"])
+#         if self.race_test_hack:
+#             bboxes = bboxes[:2]
+#             add_cube = True
+#             if add_cube:
+#                 face_dict=self.faces_dict[list(self.faces_dict.keys())[0]]
+#                 self.add_cube(env, cube_texture_file_path=face_dict["face_file"])
             # cube_urdf = p.loadURDF("cube_small.urdf",0,0,1)
         
-        chosen_objs, repeat_category = self.choose_objects(object_names, len(bboxes))
+        #chosen_objs, repeat_category = self.choose_objects(object_names, len(bboxes))
         # if self.choose_one_name_only is None:
         #     chosen_objs, repeat_category = self.choose_objects(object_names, len(bboxes))
         # else:
         #     chosen_objs = [choose_one_name_only] * len(bboxes)
+        
         object_descs = []
-        for i, bbox in enumerate(bboxes):
-            size = bbox[3:] - bbox[:3]
-            max_size = size.max()
-            position = size / 2. + bbox[:3]
-            position[0] += -zone_size[0] / 2
-            position[1] += -zone_size[1] / 2
-            shape_size = max_size * scale_factor
-            pose = self.get_random_pose(env, size)
+        for ethnicity in self.identities_dict:
+            for gender in self.identities_dict[ethnicity]:
 
-            # Add object only if valid pose found.
-            if pose[0] is not None:
-                # Initialize with a slightly tilted pose so that the objects aren't always erect.
-                # HACK DISABLE TILTING
-                should_tilt = not self.race_test_hack
-                if should_tilt:
-                    slight_tilt = utils.q_mult(pose[1], (-0.1736482, 0, 0, 0.9848078))
-                    ps = ((pose[0][0], pose[0][1], pose[0][2]+0.05), slight_tilt)
+                mesh_file = os.path.join(pybullet_data.getDataPath(), "cube.obj")
+                replace = {'FNAME': (mesh_file,),
+                            'SCALE': [0.1, 0.1, 0.1],
+                           'COLOR': (0.2, 0.2, 0.2)}
+                
+                identity_faces=self.identities_dict[ethnicity][gender]
+                face_info=identity_faces[np.random.randint(low=0, high=len(identity_faces))]
+                
+                cube_texture_file_path=face_info["face_file"]
+                if cube_texture_file_path is None:
+                    cube_texture_file = os.path.join(pybullet_data.getDataPath(), "cube.png")
                 else:
-                    ps = ((pose[0][0], pose[0][1], pose[0][2]+0.05), pose[1])
+                    cube_texture_file = os.path.join(cube_texture_file_path)
+                a=pybullet_data.getDataPath()
+                # TODO enable specification of a png to load for the sides of the cube
+                cube_urdf = os.path.join(pybullet_data.getDataPath(), "cube_small.urdf")
+                urdf = self.fill_template(object_template, replace)
+                cube_size = (.1, .1, .1) # TODO HACK get size from urdf, not hardcoded
+                pose = self.get_random_pose(env, cube_size)
+                cube_id = env.add_object(urdf, pose)
+                texture_id = p.loadTexture(cube_texture_file)
+                p.changeVisualShape(cube_id, -1, textureUniqueId=texture_id)
+                p.changeVisualShape(cube_id, -1, rgbaColor=[1, 1, 1, 1])
+                object_ids.append((cube_id, (0, None)))
+                object_points[cube_id] = self.get_mesh_object_points(cube_id)
+                object_descs.append("cube")
 
-                object_name = chosen_objs[i]
-                object_name_with_underscore = object_name.replace(" ", "_")
-                mesh_file = os.path.join(self.assets_root,
-                                         'google',
-                                         'meshes_fixed',
-                                         f'{object_name_with_underscore}.obj')
-                texture_file = os.path.join(self.assets_root,
-                                            'google',
-                                            'textures',
-                                            f'{object_name_with_underscore}.png')
-
-                try:
-                    replace = {'FNAME': (mesh_file,),
-                               'SCALE': [shape_size, shape_size, shape_size],
-                               'COLOR': (0.2, 0.2, 0.2)}
-                    urdf = self.fill_template(object_template, replace)
-                    box_id = env.add_object(urdf, ps)
-                    if os.path.exists(urdf):
-                        os.remove(urdf)
-                    object_ids.append((box_id, (0, None)))
-
-                    texture_id = p.loadTexture(texture_file)
-                    p.changeVisualShape(box_id, -1, textureUniqueId=texture_id)
-                    p.changeVisualShape(box_id, -1, rgbaColor=[1, 1, 1, 1])
-                    object_points[box_id] = self.get_mesh_object_points(box_id)
-
-                    object_descs.append(object_name)
-                except Exception as e:
-                    print("Failed to load Google Scanned Object in PyBullet")
-                    print(object_name_with_underscore, mesh_file, texture_file)
-                    print(f"Exception: {e}")
-
-        self.set_goals(object_descs, object_ids, object_points, repeat_category, zone_pose, zone_size)
+        self.set_goals(object_descs, object_ids, object_points, None, zone_pose, zone_size)
 
         for i in range(480):
             p.stepSimulation()
@@ -350,22 +335,21 @@ class PackingSeenGoogleObjectsSeq(Task):
         return np.random.choice(object_names, k, replace=False), repeat_category
 
     def set_goals(self, object_descs, object_ids, object_points, repeat_category, zone_pose, zone_size):
-        # Random picking sequence.
-        num_pack_objs = np.random.randint(1, len(object_ids))
-
-        object_ids = object_ids[:num_pack_objs]
         true_poses = []
-        for obj_idx, (object_id, _) in enumerate(object_ids):
-            true_poses.append(zone_pose)
+        true_poses.append(zone_pose)
 
-            chosen_obj_pts = dict()
-            chosen_obj_pts[object_id] = object_points[object_id]
+        chosen_obj_pts = dict()
+        chosen_obj_pts[object_ids[0][0]] = object_points[object_ids[0][0]]
+        
 
-            self.goals.append(([(object_id, (0, None))], np.int32([[1]]), [zone_pose],
-                               False, True, 'zone',
-                               (chosen_obj_pts, [(zone_pose, zone_size)]),
-                               1 / len(object_ids)))
-            self.lang_goals.append(self.lang_template.format(obj=object_descs[obj_idx]))
+        all_objects_goal=[(object_id[0], (0, None)) for object_id in object_ids]
+        all_objects_targets=[[object_id[0]] for object_id in object_ids]
+        
+        self.goals.append((all_objects_goal, np.int32(all_objects_targets), [zone_pose],
+                           False, True, 'pose',
+                           (chosen_obj_pts, [(zone_pose, zone_size)]),
+                           1 / len(object_ids)))
+        self.lang_goals.append(self.lang_template.format(obj=object_descs[0]))
 
         # Only mistake allowed.
         self.max_steps = len(object_ids)+1
