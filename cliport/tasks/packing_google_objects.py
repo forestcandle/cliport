@@ -6,9 +6,14 @@ import numpy as np
 from cliport.tasks.task import Task
 from cliport.utils import utils
 from cliport.utils import load_chicago_data
+import tempfile
 
 import pybullet as p
 import pybullet_data
+import cv2
+import skimage.measure
+import string
+import random
 
 
 class PackingSeenGoogleObjectsSeq(Task):
@@ -310,6 +315,7 @@ class PackingSeenGoogleObjectsSeq(Task):
                 face_info=identity_faces[np.random.randint(low=0, high=len(identity_faces))]
                 
                 cube_texture_file_path=face_info["face_file"]
+                cube_texture_file_path=self.randomize_image_background(cube_texture_file_path)
                 if cube_texture_file_path is None:
                     cube_texture_file = os.path.join(pybullet_data.getDataPath(), "cube.png")
                 else:
@@ -334,6 +340,29 @@ class PackingSeenGoogleObjectsSeq(Task):
 
         for i in range(480):
             p.stepSimulation()
+    
+    def randomize_image_background(self, img_path):
+        ''' Randomize image background. '''
+        
+        img=cv2.imread(img_path)
+        img=img[:, 363:2081,:]
+        rounded_img=img//20
+        label=skimage.measure.label(np.sum(rounded_img, axis=2))
+        background_label_l=label[0,0]
+        background_label_r=label[0,-1]
+        random_color=np.random.randint(0, 256, size=(3,))
+        img=np.where(label[:,:,None]==background_label_l, random_color, img)
+        img=np.where(label[:,:,None]==background_label_r, random_color, img)
+        
+        full_template_path = img_path
+        alphabet = string.ascii_lowercase + string.digits
+        rname = ''.join(random.choices(alphabet, k=16))
+        tmpdir = tempfile.gettempdir()
+        template_filename = os.path.split(full_template_path)[-1]
+        fname = os.path.join(tmpdir, f'{template_filename}-{rname}.png')
+        cv2.imwrite(fname, img)
+        
+        return fname
 
     def choose_objects(self, object_names, k):
         repeat_category = None
