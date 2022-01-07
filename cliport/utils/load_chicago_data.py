@@ -52,5 +52,5 @@ def load_chicago_dataset(chicago_datasets_root=None):
 
 
 if __name__ == '__main__':
-    face_dict = load_chicago_dataset('/Users/athundt/Downloads/chicago face database/CFD Version 3.0')
+    face_dict = load_chicago_dataset()
     print(face_dict)
