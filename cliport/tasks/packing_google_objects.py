@@ -30,7 +30,7 @@ class PackingSeenGoogleObjectsSeq(Task):
         self.object_names = self.get_object_names()
         self.race_test_hack = False
         self.faces_dict, self.identities_dict=load_chicago_data.load_chicago_dataset()
-        self.command_strings = command_strings.build_command_strings('reduced')
+        self.command_strs = command_strings.build_command_strings('reduced')
         self.target_item_description=target_item_description
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         print('pybullet_data.getDataPath(): ' + str(pybullet_data.getDataPath()))
@@ -387,7 +387,7 @@ class PackingSeenGoogleObjectsSeq(Task):
                            False, True, 'pose',
                            (chosen_obj_pts, [(zone_pose, zone_size)]),
                            1 / len(object_ids)))
-        if self.command_strings:
+        if self.command_strs:
             self.lang_goals.append(self.lang_template)
         else:
             self.lang_goals.append(self.lang_template.format(obj=object_descs[0]))
@@ -522,7 +522,7 @@ class PackingSeenGoogleObjectsGroup(PackingSeenGoogleObjectsSeq):
         self.goals.append((
             chosen_obj_ids, np.eye(len(chosen_obj_ids)), true_poses, False, True, 'zone',
             (chosen_obj_pts, [(zone_pose, zone_size)]), 1))
-        if self.command_strings:
+        if self.command_strs:
             self.lang_goals.append(self.lang_template)
         else:
             self.lang_goals.append(self.lang_template.format(obj=repeat_category))
