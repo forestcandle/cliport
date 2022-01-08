@@ -121,9 +121,9 @@ def main(vcfg):
             command_string_max = max(num_command_strs, 1)
             num_strings_in_fold = num_command_strs
             if folds > 0:
-                num_strings_in_fold = np.ceil(float(num_command_strs) / float(folds))
-                command_string_min = num_strings_in_fold * fold
-                command_string_max = min(num_strings_in_fold * (fold + 1), num_command_strs)
+                num_strings_in_fold = int(np.ceil(float(num_command_strs) / float(folds)))
+                command_string_min = int(num_strings_in_fold * fold)
+                command_string_max = int(min(num_strings_in_fold * (fold + 1), num_command_strs))
 
             # Run testing and save total rewards with last transition info.
             for j in range(command_string_min, command_string_max):
@@ -178,6 +178,7 @@ def main(vcfg):
                         video_name = f'{task_name}-{i+1:06d}'
                         if 'multi' in vcfg['model_task']:
                             video_name = f"{vcfg['model_task']}-{video_name}"
+
                         env.start_rec(video_name)
 
                     for _ in range(task.max_steps):
