@@ -176,7 +176,7 @@ def main(vcfg):
 
                     # Start recording video (NOTE: super slow)
                     if record:
-                        video_name = f'{task_name}-{i+1:06d}'
+                        video_name = f'{task_name}-{k+1:06d}_desc-{current_command_string}'
                         if 'multi' in vcfg['model_task']:
                             video_name = f"{vcfg['model_task']}-{video_name}"
 
