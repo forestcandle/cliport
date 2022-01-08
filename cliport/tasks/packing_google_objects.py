@@ -315,24 +315,30 @@ class PackingSeenGoogleObjectsSeq(Task):
                             'SCALE': [0.1, 0.1, 0.1],
                            'COLOR': (0.2, 0.2, 0.2)}
 
-                identity_faces=self.identities_dict[ethnicity][gender]
-                face_info=identity_faces[np.random.randint(low=0, high=len(identity_faces))]
-
-                cube_texture_file_path=face_info["face_file"]
-                cube_texture_file_path=self.randomize_image_background(cube_texture_file_path)
+                identity_faces = self.identities_dict[ethnicity][gender]
+                cube_texture_file_path = None
+                while cube_texture_file_path is None:
+                    face_info = identity_faces[np.random.randint(low=0, high=len(identity_faces))]
+                    cube_texture_file_path = face_info["face_file"]
+                    print('WARNING: packing_google_objects.py face dataset file does not exist:' + cube_texture_file_path) if not os.path.exists(cube_texture_file_path) else 0
+                    cube_texture_file_path = self.randomize_image_background(cube_texture_file_path)
+                    print('WARNING: packing_google_objects.py face dataset file with randomized background does not exist:' + cube_texture_file_path) if not os.path.exists(cube_texture_file_path) else 0
                 if cube_texture_file_path is None:
                     cube_texture_file = os.path.join(pybullet_data.getDataPath(), "cube.png")
                 else:
                     cube_texture_file = os.path.join(cube_texture_file_path)
-                a=pybullet_data.getDataPath()
+                pybullet_data_path = pybullet_data.getDataPath()
                 # TODO enable specification of a png to load for the sides of the cube
-                cube_urdf = os.path.join(pybullet_data.getDataPath(), "cube_small.urdf")
+                cube_urdf = os.path.join(pybullet_data_path, "cube_small.urdf")
                 urdf = self.fill_template(object_template, replace)
                 cube_size = (.1, .1, .1) # TODO HACK get size from urdf, not hardcoded
                 pose = self.get_random_pose(env, cube_size)
                 cube_id = env.add_object(urdf, pose)
                 texture_id = p.loadTexture(cube_texture_file)
-                p.changeVisualShape(cube_id, -1, textureUniqueId=texture_id)
+                if texture_id is None:
+                    print('WARNING: packing_google_objects.py texture_id is None when loading file, so skipping the texture: ' + str(cube_texture_file))
+                else:
+                    p.changeVisualShape(cube_id, -1, textureUniqueId=texture_id)
                 p.changeVisualShape(cube_id, -1, rgbaColor=[1, 1, 1, 1])
                 object_ids.append((cube_id, (0, None)))
                 object_points[cube_id] = self.get_mesh_object_points(cube_id)
