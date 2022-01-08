@@ -53,7 +53,8 @@ def main(vcfg):
                                             mode=mode,
                                             n_demos=vcfg['n_demos'],
                                             augment=False)
-    elif mode is not 'test':
+    # elif mode is not 'test':
+    else:
         # TODO HACK test mode disabled for race experiments, make code work properly
         ds = dataset.RavensDataset(os.path.join(vcfg['data_dir'], f"{eval_task}-{mode}"),
                                    tcfg,
@@ -129,11 +130,12 @@ def main(vcfg):
                 for i in range(0, n_demos):
                     k = (j+1) * (i+1) + i
                     print(f'Test: total {k}/{num_strings_in_fold} current demo: {i + 1}/{n_demos} commands: {j + 1}/{num_strings_in_fold} current command: {command_strs[i]}')
-                    if mode is not 'test':
-                        episode = k
-                        seed = start_seed + i
-                    else:
-                        episode, seed = ds.load(i)
+                    # if mode is not 'test':
+                    #     episode = k
+                    #     seed = start_seed + i
+                    # else:
+                    #     episode, seed = ds.load(i)
+                    episode, seed = ds.load(i)
                     np.random.seed(seed)
                     current_command_string = command_strs[j]
                     pd_save_path = save_json[:save_json.rindex("/")]
