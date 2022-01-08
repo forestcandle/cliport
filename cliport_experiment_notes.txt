@@ -133,3 +133,15 @@ Mean: 0.66 | Task: packing-unseen-google-objects-race-white-seq | Ckpt: steps=40
 Collect demos for chicago face
 
 python cliport/demos.py n=100  task=packing-chicago-face-blocks-seq mode=test  data_dir='/home/ahundt/src/cliport/data'  disp=True
+
+
+python3 cliport/eval.py model_task=multi-language-conditioned \
+                       eval_task=packing-chicago-face-blocks-seq \
+                       agent=cliport \
+                       mode=test \
+                       n_demos=100 \
+                       train_demos=1000 \
+                       exp_folder=cliport_quickstart \
+                       checkpoint_type=val_missing \
+                       update_results=True \
+                       disp=True
