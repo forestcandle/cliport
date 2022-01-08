@@ -14,6 +14,7 @@ from cliport.utils import command_strings
 from cliport.environments.environment import Environment
 from optparse import OptionParser
 import pandas as pd
+from tqdm import tqdm, trange
 
 # parser = OptionParser()
 # # Random seed
@@ -126,10 +127,10 @@ def main(vcfg):
                 command_string_max = int(min(num_strings_in_fold * (fold + 1), num_command_strs))
 
             # Run testing and save total rewards with last transition info.
-            for j in range(command_string_min, command_string_max):
-                for i in range(0, n_demos):
+            for j in trange(command_string_min, command_string_max):
+                for i in trange(0, n_demos):
                     k = (j+1) * (i+1) + i
-                    print(f'Test: progress this run {k}/{num_strings_in_fold * n_demos} current demo: {i + 1}/{n_demos} commands: {j + 1}/{num_strings_in_fold} current command: {command_strs[j]}')
+                    # print(f'Test: progress this run {k}/{num_strings_in_fold * n_demos} current demo: {i + 1}/{n_demos} commands: {j + 1}/{num_strings_in_fold} current command: {command_strs[j]}')
                     # if mode is not 'test':
                     #     episode = k
                     #     seed = start_seed + i
