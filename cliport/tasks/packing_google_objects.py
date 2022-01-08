@@ -531,6 +531,14 @@ class PackingSeenGoogleObjectsGroup(PackingSeenGoogleObjectsSeq):
         self.max_steps = num_pack_objs+1
 
 
+class PackChicagoFaceBlocks(PackingSeenGoogleObjectsSeq):
+    """Packing Unseen Google Objects Sequence task."""
+
+    def __init__(self):
+        super().__init__()
+        self.race_test_hack = True
+
+
 class PackingUnseenGoogleObjectsGroup(PackingSeenGoogleObjectsGroup):
     """Packing Unseen Google Objects Group task."""
 
