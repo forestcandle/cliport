@@ -114,8 +114,8 @@ def main(vcfg):
             # HACK TODO clean up command string iteration, re-enable other tasks
             command_strs = command_strings.build_command_strings('reduced')
             num_command_strs = len(command_strs)
-            n_demos_per_command = n_demos
-            n_demos = n_demos * num_command_strs
+            # n_demos_per_command = n_demos
+            # n_demos = n_demos * num_command_strs
             folds = vcfg['folds']
             fold = vcfg['fold']
             command_string_min = 0
