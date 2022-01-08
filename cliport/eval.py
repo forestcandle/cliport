@@ -140,7 +140,7 @@ def main(vcfg):
                     np.random.seed(seed)
                     current_command_string = command_strs[j]
                     pd_save_path = save_json[:save_json.rindex("/")]
-                    pd_save_path = os.path.join(pd_save_path, f"run_csv_seed-{seed}_run-{i}_desc-{current_command_string}.csv")
+                    pd_save_path = os.path.join(pd_save_path, f"run_csv_seed-{seed}_run-{k}_desc-{current_command_string}.csv")
                     if os.path.exists(pd_save_path):
                         # already ran this experiment, so skip to the next one
                         continue
