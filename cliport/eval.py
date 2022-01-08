@@ -129,7 +129,7 @@ def main(vcfg):
             for j in range(command_string_min, command_string_max):
                 for i in range(0, n_demos):
                     k = (j+1) * (i+1) + i
-                    print(f'Test: total {k}/{num_strings_in_fold} current demo: {i + 1}/{n_demos} commands: {j + 1}/{num_strings_in_fold} current command: {command_strs[i]}')
+                    print(f'Test: total {k}/{num_strings_in_fold} current demo: {i + 1}/{n_demos} commands: {j + 1}/{num_strings_in_fold} current command: {command_strs[j]}')
                     # if mode is not 'test':
                     #     episode = k
                     #     seed = start_seed + i
