@@ -71,20 +71,26 @@ def main(vcfg):
     print(f"Save path for results: {save_path}")
     if not os.path.exists(save_path):
         os.makedirs(save_path)
-    save_json = os.path.join(save_path, f'{name}-{json_name}')
+
+    folds = vcfg['folds']
+    fold = vcfg['fold']
+    json_str = f'{name}-{json_name}'
+    if folds > 0:
+        json_str = f'fold{fold}-' + json_str
+    save_json = os.path.join(save_path, json_str)
 
     # Load existing results.
     existing_results = {}
-    object_infos=[]
+    object_infos = []
     if os.path.exists(save_json):
         print('Found exiting results in file: ' + str(save_json))
         with open(save_json, 'r') as f:
             existing_results = json.load(f)
 
         # Load existing log.
-    pickle_path=save_json+".p"
+    pickle_path = save_json+".p"
     if os.path.exists(pickle_path):
-        object_infos=pickle.load(open(pickle_path, "rb"))
+        object_infos = pickle.load(open(pickle_path, "rb"))
 
 
 
@@ -124,8 +130,6 @@ def main(vcfg):
             num_command_strs = len(command_strs)
             # n_demos_per_command = n_demos
             # n_demos = n_demos * num_command_strs
-            folds = vcfg['folds']
-            fold = vcfg['fold']
             command_string_min = 0
             command_string_max = max(num_command_strs, 1)
             num_strings_in_fold = num_command_strs
@@ -144,12 +148,6 @@ def main(vcfg):
             for j in trange(command_string_min, command_string_max):
                 for i in trange(0, n_demos):
                     k = (j+1) * (i+1) + i
-                    # print(f'Test: progress this run {k}/{num_strings_in_fold * n_demos} current demo: {i + 1}/{n_demos} commands: {j + 1}/{num_strings_in_fold} current command: {command_strs[j]}')
-                    # if mode is not 'test':
-                    #     episode = k
-                    #     seed = start_seed + i
-                    # else:
-                    #     episode, seed = ds.load(i)
                     episode, seed = ds.load(i)
                     np.random.seed(seed)
                     current_command_string = command_strs[j]
@@ -195,7 +193,7 @@ def main(vcfg):
                         print(f'Lang Goal: {lang_goal}')
                         obs, reward, done, info = env.step(act)
 
-                        object_info=[]
+                        object_info = []
                         object_info.append(j)
                         object_info.append(i)
                         object_info.append(task.command_strs[j])
