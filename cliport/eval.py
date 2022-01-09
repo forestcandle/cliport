@@ -75,10 +75,18 @@ def main(vcfg):
 
     # Load existing results.
     existing_results = {}
+    object_infos=[]
     if os.path.exists(save_json):
         print('Found exiting results in file: ' + str(save_json))
         with open(save_json, 'r') as f:
             existing_results = json.load(f)
+    
+        # Load existing log.
+        pickle_path=save_json+".p"
+        if os.path.exists(pickle_path):
+            object_infos=pickle.load(open(pickle_path, "rb"))
+            
+
 
     # Make a list of checkpoints to eval.
     ckpts_to_eval = list_ckpts_to_eval(vcfg, existing_results)
@@ -97,7 +105,7 @@ def main(vcfg):
 
         results = []
         mean_reward = 0.0
-        object_infos=[]
+        
         # Run testing for each training run.
         for train_run in range(vcfg['n_repeats']):
 
@@ -206,7 +214,8 @@ def main(vcfg):
                             break
 
                     df = pd.DataFrame(data=object_infos)
-                    df.to_csv(pd_save_path)
+                    df.to_csv(save_json+".csv")
+                    pickle.dump(object_infos, open(save_json+".p", "wb"))
 
                     results.append((total_reward, info))
                     mean_reward = np.mean([r for r, i in results])
@@ -221,9 +230,7 @@ def main(vcfg):
                     'mean_reward': mean_reward,
                 }
                 
-        df = pd.DataFrame(data=object_infos)
-        df.to_csv(pd_save_path)
-        pickle.dump(object_infos, open(pd_save_path+".p", "wb"))
+        
 
 
         # Save results in a json file.
