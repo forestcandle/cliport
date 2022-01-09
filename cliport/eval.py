@@ -197,11 +197,15 @@ def main(vcfg):
                         object_info.append(task.command_strs[j])
                         object_info.append(step)
 
-                        for obj_id in info['pose']:
-                            object_info.append(task.object_log_info[obj_id])
-                            object_info.append(info['pose'][obj_id])
-                            object_info.append(info['placed'][obj_id])
-                        object_infos.append(object_info)
+                        if "pose" in info:
+                            for obj_id in info['pose']:
+                                object_info.append(task.object_log_info[obj_id])
+                                object_info.append(info['pose'][obj_id])
+                                object_info.append(info['placed'][obj_id])
+                            object_infos.append(object_info)
+                        else:
+                            print("pose not in info", info)
+                            obs, reward, done, info = env.step(act)
 
                         total_reward += reward
                         print(f'Total Reward: {total_reward:.3f} | Done: {done}\n')

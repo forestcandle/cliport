@@ -212,6 +212,7 @@ class Environment(gym.Env):
             # Exit early if action times out. We still return an observation
             # so that we don't break the Gym API contract.
             if timeout:
+                print("action timed out!")
                 obs = {'color': (), 'depth': ()}
                 for config in self.agent_cams:
                     color, depth, _ = self.render_camera(config)
@@ -231,6 +232,9 @@ class Environment(gym.Env):
         info.update(self.info)
 
         obs = self._get_obs()
+
+        if not "pose" in info:
+            print("env pose not in info")
 
         return obs, reward, done, info
 
