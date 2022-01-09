@@ -140,7 +140,7 @@ def main(vcfg):
                 command_string_max = int(min(num_strings_in_fold * (fold + 1), num_command_strs))
 
             # j indexes command_string_max, i indexes n_demos
-            completed_experiments = np.zeros(command_string_max, n_demos)
+            completed_experiments = np.zeros((command_string_max, n_demos))
             if object_infos:
                 for log in object_infos:
                     completed_experiments[log[0], log[1]] = 1
