@@ -309,10 +309,10 @@ class PackingSeenGoogleObjectsSeq(Task):
         object_descs = []
         for ethnicity in self.identities_dict:
             for gender in self.identities_dict[ethnicity]:
-
+                # cube mesh file
                 mesh_file = os.path.join(pybullet_data.getDataPath(), "cube.obj")
                 replace = {'FNAME': (mesh_file,),
-                            'SCALE': [0.1, 0.1, 0.1],
+                           'SCALE': [0.1, 0.1, 0.1],
                            'COLOR': (0.2, 0.2, 0.2)}
 
                 identity_faces = self.identities_dict[ethnicity][gender]
@@ -329,16 +329,21 @@ class PackingSeenGoogleObjectsSeq(Task):
                     cube_texture_file = os.path.join(cube_texture_file_path)
                 pybullet_data_path = pybullet_data.getDataPath()
                 # TODO enable specification of a png to load for the sides of the cube
-                cube_urdf = os.path.join(pybullet_data_path, "cube_small.urdf")
-                urdf = self.fill_template(object_template, replace)
-                cube_size = (.1, .1, .1) # TODO HACK get size from urdf, not hardcoded
-                pose = self.get_random_pose(env, cube_size)
-                cube_id = env.add_object(urdf, pose)
-                texture_id = p.loadTexture(cube_texture_file)
-                if texture_id is None:
-                    print('WARNING: packing_google_objects.py texture_id is None when loading file, so skipping the texture: ' + str(cube_texture_file))
-                else:
-                    p.changeVisualShape(cube_id, -1, textureUniqueId=texture_id)
+                # cube_urdf = os.path.join(pybullet_data_path, "cube_small.urdf")
+                texture_id = None
+                cube_id = None
+                while texture_id is None or cube_id is None:
+                    urdf = self.fill_template(object_template, replace)
+                    cube_size = (.1, .1, .1) # TODO HACK get size from urdf, not hardcoded
+                    pose = self.get_random_pose(env, cube_size)
+                    cube_id = env.add_object(urdf, pose)
+                    texture_id = p.loadTexture(cube_texture_file)
+                    if texture_id is None:
+                        print('WARNING: packing_google_objects.py texture_id is None when loading file, so retrying the texture: ' + str(cube_texture_file))
+                    elif cube_id is None:
+                        print('WARNING: packing_google_objects.py cube_id is None when loading file, so retrying: ' + str(mesh_file))
+                    else:
+                        p.changeVisualShape(cube_id, -1, textureUniqueId=texture_id)
                 p.changeVisualShape(cube_id, -1, rgbaColor=[1, 1, 1, 1])
                 object_ids.append((cube_id, (0, None)))
                 object_points[cube_id] = self.get_mesh_object_points(cube_id)
