@@ -72,9 +72,10 @@ def main(vcfg):
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-    folds = vcfg['folds']
-    fold = vcfg['fold']
+    folds = int(vcfg['folds'])
+    fold = int(vcfg['fold'])
     json_str = f'{name}-{json_name}'
+    # save separate log files when running multiple processes that complete different parts of the same experiment
     if folds > 0:
         json_str = f'fold{fold}-' + json_str
     save_json = os.path.join(save_path, json_str)
