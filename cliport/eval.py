@@ -80,12 +80,12 @@ def main(vcfg):
         print('Found exiting results in file: ' + str(save_json))
         with open(save_json, 'r') as f:
             existing_results = json.load(f)
-    
+
         # Load existing log.
         pickle_path=save_json+".p"
         if os.path.exists(pickle_path):
             object_infos=pickle.load(open(pickle_path, "rb"))
-            
+
 
 
     # Make a list of checkpoints to eval.
@@ -105,7 +105,7 @@ def main(vcfg):
 
         results = []
         mean_reward = 0.0
-        
+
         # Run testing for each training run.
         for train_run in range(vcfg['n_repeats']):
 
@@ -190,7 +190,7 @@ def main(vcfg):
 
                         env.start_rec(video_name)
 
-                    for _ in range(task.max_steps):
+                    for step in range(task.max_steps):
                         act = agent.act(obs, info, goal)
                         lang_goal = info['lang_goal']
                         print(f'Lang Goal: {lang_goal}')
@@ -201,7 +201,7 @@ def main(vcfg):
                         object_info.append(j)
                         object_info.append(task.command_strs[j])
                         object_info.append(step)
-                        
+
                         for obj_id in info['pose']:
                             object_info.append(task.object_log_info[obj_id])
                             object_info.append(info['pose'][obj_id])
@@ -229,8 +229,8 @@ def main(vcfg):
                     'episodes': results,
                     'mean_reward': mean_reward,
                 }
-                
-        
+
+
 
 
         # Save results in a json file.
