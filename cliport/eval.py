@@ -71,7 +71,7 @@ def main(vcfg):
     print(f"Save path for results: {save_path}")
     if not os.path.exists(save_path):
         os.makedirs(save_path)
-    save_json = os.path.join(save_path, f'{name}-{json_name}')
+    save_json = os.path.join(save_path, f'{na me}-{json_name}')
 
     # Load existing results.
     existing_results = {}

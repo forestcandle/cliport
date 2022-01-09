@@ -15,8 +15,9 @@ def get_stats_for_run(runs_file):
     
     if os.path.isdir(runs_file):
         for file in os.listdir(runs_file):
-            runs=pickle.load(open(runs_file, 'rb'))
-            all_runs.append(runs)           
+            if file[-2:]==".p":
+                runs=pickle.load(open(os.path.join(runs_file, file), 'rb'))
+                all_runs.append(runs)           
     else:
         all_runs=pickle.load(open(runs_file, 'rb'))
     
