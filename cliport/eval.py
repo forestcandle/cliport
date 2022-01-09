@@ -97,7 +97,7 @@ def main(vcfg):
 
         results = []
         mean_reward = 0.0
-
+        object_infos=[]
         # Run testing for each training run.
         for train_run in range(vcfg['n_repeats']):
 
@@ -188,8 +188,17 @@ def main(vcfg):
                         print(f'Lang Goal: {lang_goal}')
                         obs, reward, done, info = env.step(act)
 
+                        object_info=[]
+                        object_info.append(i)
+                        object_info.append(j)
+                        object_info.append(task.command_strs[j])
+                        object_info.append(step)
+                        
                         for obj_id in info['pose']:
-                            object_infos[obj_id].append((info['pose'][obj_id], info['placed'][obj_id]))
+                            object_info.append(task.object_log_info[obj_id])
+                            object_info.append(info['pose'][obj_id])
+                            object_info.append(info['placed'][obj_id])
+                        object_infos.append(object_info)
 
                         total_reward += reward
                         print(f'Total Reward: {total_reward:.3f} | Done: {done}\n')
@@ -211,6 +220,11 @@ def main(vcfg):
                     'episodes': results,
                     'mean_reward': mean_reward,
                 }
+                
+        df = pd.DataFrame(data=object_infos)
+        df.to_csv(pd_save_path)
+        pickle.dump(object_infos, open(pd_save_path+".p", "wb"))
+
 
         # Save results in a json file.
         if vcfg['save_results']:
