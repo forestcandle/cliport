@@ -14,6 +14,7 @@ from cliport.utils import command_strings
 from cliport.environments.environment import Environment
 from optparse import OptionParser
 import pandas as pd
+from tqdm import tqdm, trange
 
 # parser = OptionParser()
 # # Random seed
@@ -113,23 +114,23 @@ def main(vcfg):
             # HACK TODO clean up command string iteration, re-enable other tasks
             command_strs = command_strings.build_command_strings('reduced')
             num_command_strs = len(command_strs)
-            n_demos_per_command = n_demos
-            n_demos = n_demos * num_command_strs
+            # n_demos_per_command = n_demos
+            # n_demos = n_demos * num_command_strs
             folds = vcfg['folds']
             fold = vcfg['fold']
             command_string_min = 0
             command_string_max = max(num_command_strs, 1)
             num_strings_in_fold = num_command_strs
             if folds > 0:
-                num_strings_in_fold = np.ceil(float(num_command_strs) / float(folds))
-                command_string_min = num_strings_in_fold * fold
-                command_string_max = min(num_strings_in_fold * (fold + 1), num_command_strs)
+                num_strings_in_fold = int(np.ceil(float(num_command_strs) / float(folds)))
+                command_string_min = int(num_strings_in_fold * fold)
+                command_string_max = int(min(num_strings_in_fold * (fold + 1), num_command_strs))
 
             # Run testing and save total rewards with last transition info.
-            for j in range(command_string_min, command_string_max):
-                for i in range(0, n_demos):
+            for j in trange(command_string_min, command_string_max):
+                for i in trange(0, n_demos):
                     k = (j+1) * (i+1) + i
-                    print(f'Test: total {k}/{num_strings_in_fold} current demo: {i + 1}/{n_demos} commands: {j + 1}/{num_strings_in_fold} current command: {command_strs[i]}')
+                    # print(f'Test: progress this run {k}/{num_strings_in_fold * n_demos} current demo: {i + 1}/{n_demos} commands: {j + 1}/{num_strings_in_fold} current command: {command_strs[j]}')
                     # if mode is not 'test':
                     #     episode = k
                     #     seed = start_seed + i
@@ -139,7 +140,7 @@ def main(vcfg):
                     np.random.seed(seed)
                     current_command_string = command_strs[j]
                     pd_save_path = save_json[:save_json.rindex("/")]
-                    pd_save_path = os.path.join(pd_save_path, f"run_csv_seed-{seed}_run-{i}_desc-{current_command_string}.csv")
+                    pd_save_path = os.path.join(pd_save_path, f"run_csv_seed-{seed}_run-{k}_desc-{current_command_string}.csv")
                     if os.path.exists(pd_save_path):
                         # already ran this experiment, so skip to the next one
                         continue
@@ -175,9 +176,10 @@ def main(vcfg):
 
                     # Start recording video (NOTE: super slow)
                     if record:
-                        video_name = f'{task_name}-{i+1:06d}'
+                        video_name = f'{task_name}-{k+1:06d}_desc-{current_command_string}'
                         if 'multi' in vcfg['model_task']:
                             video_name = f"{vcfg['model_task']}-{video_name}"
+
                         env.start_rec(video_name)
 
                     for _ in range(task.max_steps):
