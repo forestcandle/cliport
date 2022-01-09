@@ -21,8 +21,8 @@ checkpoint_type: 'val_missing'
 val_on_heldout: True
 seed: 9999
 target_item_desc: 'block'
-folds: 0 # split up the command strings into this many folds, 0 means run all cases, 4 means four separate fold runs
-fold: 1 # this run should cover this fold, if there are 4 fold runs the fold values for each process will be 1, 2, 3, 4.
+folds: 0 # to run multi-process, split up the command strings into this many folds, 0 means run all cases, 4 means four separate fold runs
+fold: 0 # to run multi-process, this run should cover this fold, if there are 4 fold runs the fold values for each process will be 0, 1, 2, 3.
 
 disp: False
 shared_memory: False
