@@ -139,9 +139,12 @@ python cliport/demos.py n=100  task=packing-chicago-face-blocks-seq mode=test  d
 
 first attempt, still needs background data to be saved
 
-commit:
-0e98e59909d1ce2d8a70d4547a67ac9353f10bcc
-2021-01-09
+commit: db315e771dc14301444fce607b2383529a956203
+date: 2022-01-09
+
+old commit: 0e98e59909d1ce2d8a70d4547a67ac9353f10bcc (started a test run but logs overwrote each other + needed other bugfixes)
+old date: 2022-01-08
+
 commands:
 
 export CUDA_VISIBLE_DEVICES="0" && python3 cliport/eval.py model_task=multi-language-conditioned \
