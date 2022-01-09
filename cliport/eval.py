@@ -92,8 +92,6 @@ def main(vcfg):
     if os.path.exists(pickle_path):
         object_infos = pickle.load(open(pickle_path, "rb"))
 
-
-
     # Make a list of checkpoints to eval.
     ckpts_to_eval = list_ckpts_to_eval(vcfg, existing_results)
 
