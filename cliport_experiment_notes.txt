@@ -140,8 +140,8 @@ python cliport/demos.py n=100  task=packing-chicago-face-blocks-seq mode=test  d
 first attempt, still needs background data to be saved
 
 commit:
-09c345091b452d4d80d75d800d924e100bc2504d
-2021-01-08
+0e98e59909d1ce2d8a70d4547a67ac9353f10bcc
+2021-01-09
 commands:
 
 export CUDA_VISIBLE_DEVICES="0" && python3 cliport/eval.py model_task=multi-language-conditioned \
@@ -155,7 +155,7 @@ export CUDA_VISIBLE_DEVICES="0" && python3 cliport/eval.py model_task=multi-lang
                        update_results=True \
                        disp=True \
                        folds=4 \
-                       fold=1
+                       fold=0
 
 export CUDA_VISIBLE_DEVICES="1" && python3 cliport/eval.py model_task=multi-language-conditioned \
                        eval_task=packing-chicago-face-blocks-seq \
@@ -168,7 +168,7 @@ export CUDA_VISIBLE_DEVICES="1" && python3 cliport/eval.py model_task=multi-lang
                        update_results=True \
                        disp=True \
                        folds=4 \
-                       fold=2
+                       fold=1
 
 
 export CUDA_VISIBLE_DEVICES="2" && python3 cliport/eval.py model_task=multi-language-conditioned \
@@ -182,7 +182,7 @@ export CUDA_VISIBLE_DEVICES="2" && python3 cliport/eval.py model_task=multi-lang
                         update_results=True \
                         disp=True \
                         folds=4 \
-                        fold=3
+                        fold=2
 
 
 export CUDA_VISIBLE_DEVICES="3" && python3 cliport/eval.py model_task=multi-language-conditioned \
@@ -196,4 +196,4 @@ export CUDA_VISIBLE_DEVICES="3" && python3 cliport/eval.py model_task=multi-lang
                        update_results=True \
                        disp=True \
                        folds=4 \
-                       fold=4
+                       fold=3
