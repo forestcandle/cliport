@@ -215,20 +215,15 @@ class PackingSeenGoogleObjectsSeq(Task):
         }
 
     def reset(self, env):
-        super().reset(env)
+        
 
         # object names
         object_names = self.object_names[self.mode]
 
         # Add container box.
-        zone_size = self.get_random_size(0.2, 0.35, 0.2, 0.35, 0.05, 0.05)
-        zone_pose = self.get_random_pose(env, zone_size)
-        container_template = 'container/container-template.urdf'
-        half = np.float32(zone_size) / 2
-        replace = {'DIM': zone_size, 'HALF': half}
-        container_urdf = self.fill_template(container_template, replace)
-        env.add_object(container_urdf, zone_pose, 'fixed')
-        if os.path.exists(container_urdf): os.remove(container_urdf)
+        
+        
+        
 
         margin = 0.01
         min_object_dim = 0.05
@@ -270,18 +265,17 @@ class PackingSeenGoogleObjectsSeq(Task):
             KDTree(node.children[1])
 
         # Split container space with KD trees.
-        stack_size = np.array(zone_size)
-        stack_size[0] -= 0.01
-        stack_size[1] -= 0.01
-        root_size = (0.01, 0.01, 0) + tuple(stack_size)
-        root = TreeNode(None, [], bbox=np.array(root_size))
-        KDTree(root)
-
-        # Add Google Scanned Objects to scene.
-        object_points = {}
-        object_ids = []
-        bboxes=np.array(bboxes)
-        bboxes=bboxes[:2]
+#         stack_size = np.array(zone_size)
+#         stack_size[0] -= 0.01
+#         stack_size[1] -= 0.01
+#         root_size = (0.01, 0.01, 0) + tuple(stack_size)
+#         root = TreeNode(None, [], bbox=np.array(root_size))
+#         KDTree(root)
+# 
+#         # Add Google Scanned Objects to scene.
+#         
+#         bboxes=np.array(bboxes)
+#         bboxes=bboxes[:2]
 #         bboxes = np.array([[0.0, 0.0, 0., 0.1, 0.1, 0.05],
 #                              [0.1, 0.1, 0., 0.2, 0.2, 0.05],
 #                              [0.2, 0.2, 0., 0.3, 0.3, 0.05],
@@ -304,8 +298,29 @@ class PackingSeenGoogleObjectsSeq(Task):
         # else:
         #     chosen_objs = [choose_one_name_only] * len(bboxes)
 
-        self.object_log_info={}
+        object_ids=None
+        while object_ids is None:
+            env.reset(task_reset=False)
+            super().reset(env)
+            container_template = 'container/container-template.urdf'
+            zone_size = self.get_random_size(0.2, 0.35, 0.2, 0.35, 0.05, 0.05)
+            half = np.float32(zone_size) / 2
+            replace = {'DIM': zone_size, 'HALF': half}
+            container_urdf = self.fill_template(container_template, replace)
+            zone_pose = self.get_random_pose(env, zone_size)
+            env.add_object(container_urdf, zone_pose, 'fixed')
+            if os.path.exists(container_urdf): os.remove(container_urdf)
+            object_ids, object_points, object_descs=self.place_objects(object_template, env)
 
+        self.set_goals(object_descs, object_ids, object_points, None, zone_pose, zone_size)
+
+        for i in range(480):
+            p.stepSimulation()
+    
+    def place_objects(self, object_template, env):
+        self.object_log_info={}
+        object_points = {}
+        object_ids = []
         object_descs = []
         for ethnicity in self.identities_dict:
             for gender in self.identities_dict[ethnicity]:
@@ -340,8 +355,10 @@ class PackingSeenGoogleObjectsSeq(Task):
                     texture_id = p.loadTexture(cube_texture_file)
                     if texture_id is None:
                         print('WARNING: packing_google_objects.py texture_id is None when loading file, so retrying the texture: ' + str(cube_texture_file))
+                        return None, None, None
                     elif cube_id is None:
                         print('WARNING: packing_google_objects.py cube_id is None when loading file, so retrying: ' + str(mesh_file))
+                        return None, None, None
                     else:
                         p.changeVisualShape(cube_id, -1, textureUniqueId=texture_id)
                 p.changeVisualShape(cube_id, -1, rgbaColor=[1, 1, 1, 1])
@@ -350,11 +367,7 @@ class PackingSeenGoogleObjectsSeq(Task):
                 object_descs.append(self.target_item_description)
 
                 self.object_log_info[cube_id]=((ethnicity, gender), face_info["face_file"])
-
-        self.set_goals(object_descs, object_ids, object_points, None, zone_pose, zone_size)
-
-        for i in range(480):
-            p.stepSimulation()
+        return object_ids, object_points, object_descs
 
     def randomize_image_background(self, img_path):
         ''' Randomize image background. '''

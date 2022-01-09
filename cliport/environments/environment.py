@@ -151,7 +151,7 @@ class Environment(gym.Env):
         self._random = np.random.RandomState(seed)
         return seed
 
-    def reset(self):
+    def reset(self, task_reset=True):
         """Performs common reset functionality for all supported tasks."""
         if not self.task:
             raise ValueError('environment task must be set. Call set_task or pass '
@@ -188,7 +188,8 @@ class Environment(gym.Env):
         self.ee.release()
 
         # Reset task.
-        self.task.reset(self)
+        if task_reset:
+            self.task.reset(self)
 
         # Re-enable rendering.
         p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
