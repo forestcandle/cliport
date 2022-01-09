@@ -177,10 +177,6 @@ def main(vcfg):
                     info = env.info
                     reward = 0
 
-                    for obj_id in task.object_log_info:
-                        object_infos[obj_id]=[]
-                        object_infos[obj_id].append(task.object_log_info[obj_id])
-
                     # Start recording video (NOTE: super slow)
                     if record:
                         video_name = f'{task_name}-{k+1:06d}_desc-{current_command_string}'
