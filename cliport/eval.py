@@ -155,7 +155,6 @@ def main(vcfg):
 
                     goal = episode[-1]
                     total_reward = 0
-                    object_infos={}
 
                     # set task
                     if 'multi' in dataset_type:
