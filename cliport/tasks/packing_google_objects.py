@@ -33,7 +33,8 @@ class PackingSeenGoogleObjectsSeq(Task):
         self.command_strs = command_strings.build_command_strings('reduced')
         self.target_item_description=target_item_description
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
-        print('pybullet_data.getDataPath(): ' + str(pybullet_data.getDataPath()))
+        # uncomment line below to view where the built in pybullet asset files like the cube are
+        # print('pybullet_data.getDataPath(): ' + str(pybullet_data.getDataPath()))
         # self.choose_one_name_only = None
 
     def get_object_names(self):
@@ -215,15 +216,15 @@ class PackingSeenGoogleObjectsSeq(Task):
         }
 
     def reset(self, env):
-        
+
 
         # object names
         object_names = self.object_names[self.mode]
 
         # Add container box.
-        
-        
-        
+
+
+
 
         margin = 0.01
         min_object_dim = 0.05
@@ -271,9 +272,9 @@ class PackingSeenGoogleObjectsSeq(Task):
 #         root_size = (0.01, 0.01, 0) + tuple(stack_size)
 #         root = TreeNode(None, [], bbox=np.array(root_size))
 #         KDTree(root)
-# 
+#
 #         # Add Google Scanned Objects to scene.
-#         
+#
 #         bboxes=np.array(bboxes)
 #         bboxes=bboxes[:2]
 #         bboxes = np.array([[0.0, 0.0, 0., 0.1, 0.1, 0.05],
@@ -316,7 +317,7 @@ class PackingSeenGoogleObjectsSeq(Task):
 
         for i in range(480):
             p.stepSimulation()
-    
+
     def place_objects(self, object_template, env):
         self.object_log_info={}
         object_points = {}
