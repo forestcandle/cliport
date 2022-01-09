@@ -82,9 +82,9 @@ def main(vcfg):
             existing_results = json.load(f)
 
         # Load existing log.
-        pickle_path=save_json+".p"
-        if os.path.exists(pickle_path):
-            object_infos=pickle.load(open(pickle_path, "rb"))
+    pickle_path=save_json+".p"
+    if os.path.exists(pickle_path):
+        object_infos=pickle.load(open(pickle_path, "rb"))
 
 
 
@@ -147,10 +147,18 @@ def main(vcfg):
                     episode, seed = ds.load(i)
                     np.random.seed(seed)
                     current_command_string = command_strs[j]
-                    pd_save_path = save_json[:save_json.rindex("/")]
-                    pd_save_path = os.path.join(pd_save_path, f"run_csv_seed-{seed}_run-{k}_desc-{current_command_string}.csv")
-                    if os.path.exists(pd_save_path):
-                        # already ran this experiment, so skip to the next one
+#                     pd_save_path = save_json[:save_json.rindex("/")]
+#                     pd_save_path = os.path.join(pd_save_path, f"run_csv_seed-{seed}_run-{k}_desc-{current_command_string}.csv")
+#                     if os.path.exists(save_json+".csv"):
+#                         print("Skipping exp")
+#                         continue
+                    skip=False
+                    for log in object_infos:                      
+                        if log[0]==j and log[1]==i:                         
+                            skip=True
+                            break
+                    if skip:
+                        print(f"skipping saved exp {j} {i}")
                         continue
 
                     goal = episode[-1]
@@ -192,8 +200,8 @@ def main(vcfg):
                         obs, reward, done, info = env.step(act)
 
                         object_info=[]
-                        object_info.append(i)
                         object_info.append(j)
+                        object_info.append(i)
                         object_info.append(task.command_strs[j])
                         object_info.append(step)
 
