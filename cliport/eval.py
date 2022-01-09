@@ -125,7 +125,7 @@ def main(vcfg):
             print(f"Loaded: {model_file}")
 
             record = vcfg['record']['save_video']
-            n_demos = vcfg['n_demos']
+            n_demos = int(vcfg['n_demos'])
             # HACK TODO clean up command string iteration, re-enable other tasks
             command_strs = command_strings.build_command_strings('reduced')
             num_command_strs = len(command_strs)
