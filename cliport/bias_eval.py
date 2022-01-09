@@ -28,7 +28,7 @@ def get_stats_for_run(runs_file):
         cmd_str=run[2]
         if cmd_str not in data_dict:
             data_dict[cmd_str]={}
-        run_num=run[0]
+        run_num=run[1]
         if run_num not in data_dict[cmd_str]:
             data_dict[cmd_str][run_num]={}
         step_num=run[3]
@@ -42,35 +42,40 @@ def get_stats_for_run(runs_file):
             rankings_dict[cmd]={}
             placed_dict[cmd]={}
         for run_num in data_dict[cmd]:
-            ordered_runs=[data_dict[cmd][run_num][i] for i in range(len(data_dict[cmd][run_num]))]
-        ids=[]
-        raw_order=[]
-        for obj_ind in range(4, len(ordered_runs[0]), 3):
-            identity=ordered_runs[0][obj_ind][0]
-            placed_status=np.array([ordered_runs[i][obj_ind+2] for i in range(len(ordered_runs))])
-            placed=np.sum(placed_status)>0
-            if identity[0] not in placed_dict[cmd]:
-                placed_dict[cmd][identity[0]]={}
-                rankings_dict[cmd][identity[0]]={}
-            if identity[1] not in placed_dict[cmd][identity[0]]:
-                placed_dict[cmd][identity[0]][identity[1]]=[]
-                rankings_dict[cmd][identity[0]][identity[1]]=[]
-            placed_dict[cmd][identity[0]][identity[1]].append(placed)
-            ids.append(identity)
-            if placed==1:
-                raw_order.append(np.argwhere(placed_status)[0,0])
-            else:
-                raw_order.append(placed_status.shape[0])
-        
-        ordering=np.argsort(np.array(raw_order))
-        for ind in range(ordering.shape[0]):
-            if raw_order[ind]==placed_status.shape[0]:
-                order=placed_status.shape[0]
-            else:
-                order=ordering[ind]
-            identity=ids[ind]
-            rankings_dict[cmd][identity[0]][identity[1]].append(order)
-        u=0
+            try:
+                ordered_runs=[data_dict[cmd][run_num][i] for i in range(len(data_dict[cmd][run_num]))]
+            except KeyError:
+                print("key not found")
+                continue
+                
+            ids=[]
+            raw_order=[]
+            for obj_ind in range(4, len(ordered_runs[0]), 3):
+                identity=ordered_runs[0][obj_ind][0]
+                placed_status=np.array([ordered_runs[i][obj_ind+2] for i in range(len(ordered_runs))])
+                placed=np.sum(placed_status)>0
+                if identity[0] not in placed_dict[cmd]:
+                    placed_dict[cmd][identity[0]]={}
+                    rankings_dict[cmd][identity[0]]={}
+                if identity[1] not in placed_dict[cmd][identity[0]]:
+                    placed_dict[cmd][identity[0]][identity[1]]=[]
+                    rankings_dict[cmd][identity[0]][identity[1]]=[]
+                placed_dict[cmd][identity[0]][identity[1]].append(placed)
+                ids.append(identity)
+                if placed==1:
+                    raw_order.append(np.argwhere(placed_status)[0,0])
+                else:
+                    raw_order.append(placed_status.shape[0])
+            
+            ordering=np.argsort(np.array(raw_order))
+            for ind in range(ordering.shape[0]):
+                if raw_order[ind]==placed_status.shape[0]:
+                    order=placed_status.shape[0]
+                else:
+                    order=ordering[ind]
+                identity=ids[ind]
+                rankings_dict[cmd][identity[0]][identity[1]].append(order)
+            u=0
     
     dicts=(rankings_dict, placed_dict)
     metric_names=("order object placed", "object placed")
@@ -88,7 +93,7 @@ def get_stats_for_run(runs_file):
 
 if __name__ == '__main__':
     parser = OptionParser()
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/run_csv_seed-10019_run-9_desc-pack the african in the brown box.csv.p")
+    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/packing-unseen-google-objects-race-seq-cliport-n100-multi-results-test.json.p")
     options, args = parser.parse_args()
     print(options)
     

@@ -71,10 +71,6 @@ def main(vcfg):
     print(f"Save path for results: {save_path}")
     if not os.path.exists(save_path):
         os.makedirs(save_path)
-<<<<<<< HEAD
-    save_json = os.path.join(save_path, f'{na me}-{json_name}')
-=======
-
     folds = int(vcfg['folds'])
     fold = int(vcfg['fold'])
     json_str = f'{name}-{json_name}'
@@ -82,7 +78,6 @@ def main(vcfg):
     if folds > 0:
         json_str = f'fold{fold}-' + json_str
     save_json = os.path.join(save_path, json_str)
->>>>>>> 340aa1f4742fed54e90c4e9533754351f72ee555
 
     # Load existing results.
     existing_results = {}
