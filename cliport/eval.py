@@ -134,6 +134,12 @@ def main(vcfg):
                 command_string_min = int(num_strings_in_fold * fold)
                 command_string_max = int(min(num_strings_in_fold * (fold + 1), num_command_strs))
 
+            # j indexes command_string_max, i indexes n_demos
+            completed_experiments = np.zeros(command_string_max, n_demos)
+            if object_infos:
+                for log in object_infos:
+                    completed_experiments[log[0], log[1]] = 1
+
             # Run testing and save total rewards with last transition info.
             for j in trange(command_string_min, command_string_max):
                 for i in trange(0, n_demos):
@@ -147,17 +153,7 @@ def main(vcfg):
                     episode, seed = ds.load(i)
                     np.random.seed(seed)
                     current_command_string = command_strs[j]
-#                     pd_save_path = save_json[:save_json.rindex("/")]
-#                     pd_save_path = os.path.join(pd_save_path, f"run_csv_seed-{seed}_run-{k}_desc-{current_command_string}.csv")
-#                     if os.path.exists(save_json+".csv"):
-#                         print("Skipping exp")
-#                         continue
-                    skip=False
-                    for log in object_infos:                      
-                        if log[0]==j and log[1]==i:                         
-                            skip=True
-                            break
-                    if skip:
+                    if completed_experiments[j, i]:
                         print(f"skipping saved exp {j} {i}")
                         continue
 
@@ -231,6 +227,7 @@ def main(vcfg):
                     # End recording video
                     if record:
                         env.end_rec()
+                    completed_experiments[j, i] = 1
 
                 all_results[ckpt] = {
                     'episodes': results,
