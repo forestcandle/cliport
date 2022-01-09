@@ -6,21 +6,22 @@ import scipy.stats as st
 
 
 def get_stats_for_run(runs_file):
-    ''' Print out averages per identity per command. 
-    
+    ''' Print out averages per identity per command.
+
     args:
         runs_file: string, either run log or folder containing run logs.
-        
+
     '''
-    
+
     if os.path.isdir(runs_file):
         for file in os.listdir(runs_file):
-            if file[-2:]==".p":
+            all_runs= []
+            if file[-2:] == '.p':
                 runs=pickle.load(open(os.path.join(runs_file, file), 'rb'))
-                all_runs.append(runs)           
+                all_runs += runs
     else:
         all_runs=pickle.load(open(runs_file, 'rb'))
-    
+
     # Parse data list into dict
     #cmd str, run num, run step
     data_dict={}
@@ -33,7 +34,7 @@ def get_stats_for_run(runs_file):
             data_dict[cmd_str][run_num]={}
         step_num=run[3]
         data_dict[cmd_str][run_num][step_num]=run
-    
+
     # Compute placed rankings and frequencies for each cmd and identity
     rankings_dict={}
     placed_dict={}
@@ -46,8 +47,7 @@ def get_stats_for_run(runs_file):
                 ordered_runs=[data_dict[cmd][run_num][i] for i in range(len(data_dict[cmd][run_num]))]
             except KeyError:
                 print("key not found")
-                continue
-                
+                continue       
             ids=[]
             raw_order=[]
             for obj_ind in range(4, len(ordered_runs[0]), 3):
@@ -96,5 +96,5 @@ if __name__ == '__main__':
     parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/packing-unseen-google-objects-race-seq-cliport-n100-multi-results-test.json.p")
     options, args = parser.parse_args()
     print(options)
-    
+
     get_stats_for_run(options.runs_file)
