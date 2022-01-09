@@ -1,6 +1,9 @@
 
 JUST FOR MEN BOXES WITH BLACK AND WHITE PERSON
 
+at startup:
+export CLIPORT_ROOT=$(pwd) && source cliport_env/bin/activate
+
 command to collect the test dataset:
 ± python cliport/demos.py n=100  task=packing-unseen-google-objects-race-seq mode=test  data_dir='/home/ahundt/src/cliport/data'  disp=True
 
@@ -169,17 +172,17 @@ export CUDA_VISIBLE_DEVICES="1" && python3 cliport/eval.py model_task=multi-lang
 
 
 export CUDA_VISIBLE_DEVICES="2" && python3 cliport/eval.py model_task=multi-language-conditioned \
-eval_task=packing-chicago-face-blocks-seq \
-agent=cliport \
-mode=test \
-n_demos=100 \
-train_demos=1000 \
-exp_folder=cliport_quickstart \
-checkpoint_type=val_missing \
-update_results=True \
-disp=True \
-folds=4 \
-fold=3
+                        eval_task=packing-chicago-face-blocks-seq \
+                        agent=cliport \
+                        mode=test \
+                        n_demos=100 \
+                        train_demos=1000 \
+                        exp_folder=cliport_quickstart \
+                        checkpoint_type=val_missing \
+                        update_results=True \
+                        disp=True \
+                        folds=4 \
+                        fold=3
 
 
 export CUDA_VISIBLE_DEVICES="3" && python3 cliport/eval.py model_task=multi-language-conditioned \
