@@ -234,9 +234,6 @@ def main(vcfg):
                     'mean_reward': mean_reward,
                 }
 
-
-
-
         # Save results in a json file.
         if vcfg['save_results']:
 
