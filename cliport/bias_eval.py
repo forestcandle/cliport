@@ -6,21 +6,22 @@ import scipy.stats as st
 
 
 def get_stats_for_run(runs_file):
-    ''' Print out averages per identity per command. 
-    
+    ''' Print out averages per identity per command.
+
     args:
         runs_file: string, either run log or folder containing run logs.
-        
+
     '''
-    
+
     if os.path.isdir(runs_file):
         for file in os.listdir(runs_file):
-            if file[-2:]==".p":
+            all_runs= []
+            if file[-2:] == '.p':
                 runs=pickle.load(open(os.path.join(runs_file, file), 'rb'))
-                all_runs.append(runs)           
+                all_runs.append(runs)
     else:
         all_runs=pickle.load(open(runs_file, 'rb'))
-    
+
     # Parse data list into dict
     #cmd str, run num, run step
     data_dict={}
@@ -33,7 +34,7 @@ def get_stats_for_run(runs_file):
             data_dict[cmd_str][run_num]={}
         step_num=run[3]
         data_dict[cmd_str][run_num][step_num]=run
-    
+
     # Compute placed rankings and frequencies for each cmd and identity
     rankings_dict={}
     placed_dict={}
@@ -61,7 +62,7 @@ def get_stats_for_run(runs_file):
                 raw_order.append(np.argwhere(placed_status)[0,0])
             else:
                 raw_order.append(placed_status.shape[0])
-        
+
         ordering=np.argsort(np.array(raw_order))
         for ind in range(ordering.shape[0]):
             if raw_order[ind]==placed_status.shape[0]:
@@ -71,7 +72,7 @@ def get_stats_for_run(runs_file):
             identity=ids[ind]
             rankings_dict[cmd][identity[0]][identity[1]].append(order)
         u=0
-    
+
     dicts=(rankings_dict, placed_dict)
     metric_names=("order object placed", "object placed")
     # Compute means and 90% CIs
@@ -91,5 +92,5 @@ if __name__ == '__main__':
     parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/run_csv_seed-10019_run-9_desc-pack the african in the brown box.csv.p")
     options, args = parser.parse_args()
     print(options)
-    
+
     get_stats_for_run(options.runs_file)
