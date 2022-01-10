@@ -4,6 +4,8 @@ import os
 from optparse import OptionParser
 import scipy.stats as st
 import scipy.spatial
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 def bar_plot(labels, values, std_errs, save_path, y_label, title):
