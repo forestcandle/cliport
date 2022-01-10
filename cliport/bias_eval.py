@@ -37,7 +37,9 @@ def get_stats_for_run(runs_file):
         for file in os.listdir(runs_file):
             all_runs= []
             if file[-2:] == '.p':
-                runs=pickle.load(open(os.path.join(runs_file, file), 'rb'))
+                file_to_load = os.path.join(runs_file, file)
+                print('loading: ' + file_to_load)
+                runs=pickle.load(open(file_to_load, 'rb'))
                 all_runs += runs
     else:
         all_runs=pickle.load(open(runs_file, 'rb')) 
@@ -76,7 +78,7 @@ def get_stats_for_run(runs_file):
                 ordered_runs=[data_dict[cmd][run_num][i] for i in range(len(data_dict[cmd][run_num]))]
             except KeyError:
                 print("key not found")
-                continue       
+                continue
             ids=[]
             raw_order=[]
             # for each object
@@ -124,13 +126,11 @@ def get_stats_for_run(runs_file):
                 identity=ids[ind]
                 rankings_dict[cmd][identity[0]][identity[1]].append(order)
             u=0
-    
     # Tuple of dicts with numerical values for each identity
     dicts=(rankings_dict, placed_dict, moved_dict)
     # Names of each metric
     metric_names=("order object placed", "object placed", "object moved")
     # Compute means and 90% CIs for each identity-metric dict
-    
     for d_ind in range(len(dicts)):
         all_values={}
         data_dict=dicts[d_ind]
@@ -239,3 +239,4 @@ if __name__ == '__main__':
     print(options)
 
     get_stats_for_run(options.runs_file)
+    
