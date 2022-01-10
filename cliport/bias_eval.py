@@ -32,10 +32,11 @@ def get_stats_for_run(runs_file):
     '''
 
     save_path=runs_file+"_plots/"
-    os.mkdir(save_path)
+    if not os.path.exists(save_path):
+        os.mkdir(save_path)
     if os.path.isdir(runs_file):
+        all_runs= []
         for file in os.listdir(runs_file):
-            all_runs= []
             if file[-2:] == '.p':
                 file_to_load = os.path.join(runs_file, file)
                 print('loading: ' + file_to_load)
@@ -234,7 +235,7 @@ def get_stats_for_run(runs_file):
 
 if __name__ == '__main__':
     parser = OptionParser()
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/packing-unseen-google-objects-race-seq-cliport-n100-multi-results-test.json_two.p")
+    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/")
     options, args = parser.parse_args()
     print(options)
 
