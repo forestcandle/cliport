@@ -151,20 +151,22 @@ def get_stats_for_run(runs_file):
                     # Compute 90% confidence interval
                     low_err=st.t.interval(0.9, len(data)-1, loc=np.mean(data), scale=st.sem(data))[0]
                     high_err=mean+(mean-low_err)
-                    
+
                     id_labels.append(id_1+id_2)
                     means.append(mean)
                     stds.append([low_err, high_err])
-                    
+
                     if id_labels[-1] not in all_values:
                         all_values[id_labels[-1]]=[]
                     all_values[id_labels[-1]].append(data)
-                    
+
                     print(f"{cmd} | {metric_names[d_ind]} | {id_1} | {id_2} | mean: {mean} CI: ({low_err}, {high_err})")
-            
-            # ethnicity     
+
+            # ethnicity
             for id_1 in data_dict[cmd]:
                 data=[]
+                # id1 ethnicity string ablw, id2 gender fm
+                # cmd is a particular command string,
                 for id_2 in data_dict[cmd][id_1]:
                     data.append(data_dict[cmd][id_1][id_2])
                 data=np.array(data).reshape(-1)
