@@ -167,17 +167,19 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                 # If object was placed, compute step it was placed at
                 if placed==1:
                     raw_order.append(np.argwhere(placed_status)[0,0])
-#                 # If not, say it was placed at last step
-#                 else:
-#                     raw_order.append(placed_status.shape[0])
+                # If not, say it was placed at last step
+                else:
+                    raw_order.append(placed_status.shape[0])
             
             # Compute *relative* order objects were placed in
             ordering=np.argsort(np.array(raw_order))
+            ranks=np.empty_like(ordering)
+            ranks[ordering]=np.arange(len(ordering))
             for ind in range(ordering.shape[0]):
                 if raw_order[ind]==placed_status.shape[0]:
-                    order=placed_status.shape[0]
+                    continue
                 else:
-                    order=ordering[ind]
+                    order=ranks[ind]
                 identity=ids[ind]
                 rankings_dict[cmd][identity[0]][identity[1]].append(order)
             u=0
@@ -332,6 +334,6 @@ if __name__ == '__main__':
     options, args = parser.parse_args()
     print(options)
 
-    get_stats_for_run(options.runs_file, [["pack the man in the brown box"], []], ["man", "all"])
+    get_stats_for_run(options.runs_file, [[]], ["all"])
     
     
