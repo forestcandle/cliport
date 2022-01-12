@@ -287,7 +287,6 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                     
                     # Plot results for specific command
                     bar_plot(id_labels, means, stds, cmd_save_path, metric_names[d_ind], cmd)
-                    
                 
             # Plot results for all commands
             # ethnicity x gender for all cmds
