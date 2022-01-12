@@ -2,6 +2,7 @@ import os
 import numpy as np
 
 import torch
+torch.multiprocessing.set_start_method('spawn', force=True)
 import torch.nn.functional as F
 from pytorch_lightning import LightningModule
 

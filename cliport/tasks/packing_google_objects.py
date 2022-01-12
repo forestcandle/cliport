@@ -33,6 +33,9 @@ class PackingSeenGoogleObjectsSeq(Task):
         self.command_strs = command_strings.build_command_strings('reduced')
         self.target_item_description=target_item_description
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
+        
+        self.identity_2=[]
+        
         # uncomment line below to view where the built in pybullet asset files like the cube are
         # print('pybullet_data.getDataPath(): ' + str(pybullet_data.getDataPath()))
         # self.choose_one_name_only = None
@@ -323,51 +326,56 @@ class PackingSeenGoogleObjectsSeq(Task):
         object_points = {}
         object_ids = []
         object_descs = []
-        for ethnicity in self.identities_dict:
-            for gender in self.identities_dict[ethnicity]:
-                # cube mesh file
-                mesh_file = os.path.join(pybullet_data.getDataPath(), "cube.obj")
-                replace = {'FNAME': (mesh_file,),
-                           'SCALE': [0.1, 0.1, 0.1],
-                           'COLOR': (0.2, 0.2, 0.2)}
+        
+        identities=[['W', 'M']]+[self.identity_2]
+        
+        for identity in identities:#self.identities_dict:
+            ethnicity=identity[0]
+            gender=identity[1]
+#             for gender in ["M"]:#self.identities_dict[ethnicity]:
+            # cube mesh file
+            mesh_file = os.path.join(pybullet_data.getDataPath(), "cube.obj")
+            replace = {'FNAME': (mesh_file,),
+                       'SCALE': [0.1, 0.1, 0.1],
+                       'COLOR': (0.2, 0.2, 0.2)}
 
-                identity_faces = self.identities_dict[ethnicity][gender]
-                cube_texture_file_path = None
-                while cube_texture_file_path is None:
-                    face_info = identity_faces[np.random.randint(low=0, high=len(identity_faces))]
-                    cube_texture_file_path = face_info["face_file"]
-                    print('WARNING: packing_google_objects.py face dataset file does not exist:' + cube_texture_file_path) if not os.path.exists(cube_texture_file_path) else 0
-                    cube_texture_file_path = self.randomize_image_background(cube_texture_file_path)
-                    print('WARNING: packing_google_objects.py face dataset file with randomized background does not exist:' + cube_texture_file_path) if not os.path.exists(cube_texture_file_path) else 0
-                if cube_texture_file_path is None:
-                    cube_texture_file = os.path.join(pybullet_data.getDataPath(), "cube.png")
+            identity_faces = self.identities_dict[ethnicity][gender]
+            cube_texture_file_path = None
+            while cube_texture_file_path is None:
+                face_info = identity_faces[np.random.randint(low=0, high=len(identity_faces))]
+                cube_texture_file_path = face_info["face_file"]
+                print('WARNING: packing_google_objects.py face dataset file does not exist:' + cube_texture_file_path) if not os.path.exists(cube_texture_file_path) else 0
+                cube_texture_file_path = self.randomize_image_background(cube_texture_file_path)
+                print('WARNING: packing_google_objects.py face dataset file with randomized background does not exist:' + cube_texture_file_path) if not os.path.exists(cube_texture_file_path) else 0
+            if cube_texture_file_path is None:
+                cube_texture_file = os.path.join(pybullet_data.getDataPath(), "cube.png")
+            else:
+                cube_texture_file = os.path.join(cube_texture_file_path)
+            pybullet_data_path = pybullet_data.getDataPath()
+            # TODO enable specification of a png to load for the sides of the cube
+            # cube_urdf = os.path.join(pybullet_data_path, "cube_small.urdf")
+            texture_id = None
+            cube_id = None
+            while texture_id is None or cube_id is None:
+                urdf = self.fill_template(object_template, replace)
+                cube_size = (.1, .1, .1) # TODO HACK get size from urdf, not hardcoded
+                pose = self.get_random_pose(env, cube_size)
+                cube_id = env.add_object(urdf, pose)
+                texture_id = p.loadTexture(cube_texture_file)
+                if texture_id is None:
+                    print('WARNING: packing_google_objects.py texture_id is None when loading file, so retrying the texture: ' + str(cube_texture_file))
+                    return None, None, None
+                elif cube_id is None:
+                    print('WARNING: packing_google_objects.py cube_id is None when loading file, so retrying: ' + str(mesh_file))
+                    return None, None, None
                 else:
-                    cube_texture_file = os.path.join(cube_texture_file_path)
-                pybullet_data_path = pybullet_data.getDataPath()
-                # TODO enable specification of a png to load for the sides of the cube
-                # cube_urdf = os.path.join(pybullet_data_path, "cube_small.urdf")
-                texture_id = None
-                cube_id = None
-                while texture_id is None or cube_id is None:
-                    urdf = self.fill_template(object_template, replace)
-                    cube_size = (.1, .1, .1) # TODO HACK get size from urdf, not hardcoded
-                    pose = self.get_random_pose(env, cube_size)
-                    cube_id = env.add_object(urdf, pose)
-                    texture_id = p.loadTexture(cube_texture_file)
-                    if texture_id is None:
-                        print('WARNING: packing_google_objects.py texture_id is None when loading file, so retrying the texture: ' + str(cube_texture_file))
-                        return None, None, None
-                    elif cube_id is None:
-                        print('WARNING: packing_google_objects.py cube_id is None when loading file, so retrying: ' + str(mesh_file))
-                        return None, None, None
-                    else:
-                        p.changeVisualShape(cube_id, -1, textureUniqueId=texture_id)
-                p.changeVisualShape(cube_id, -1, rgbaColor=[1, 1, 1, 1])
-                object_ids.append((cube_id, (0, None)))
-                object_points[cube_id] = self.get_mesh_object_points(cube_id)
-                object_descs.append(self.target_item_description)
+                    p.changeVisualShape(cube_id, -1, textureUniqueId=texture_id)
+            p.changeVisualShape(cube_id, -1, rgbaColor=[1, 1, 1, 1])
+            object_ids.append((cube_id, (0, None)))
+            object_points[cube_id] = self.get_mesh_object_points(cube_id)
+            object_descs.append(self.target_item_description)
 
-                self.object_log_info[cube_id]=((ethnicity, gender), face_info["face_file"])
+            self.object_log_info[cube_id]=((ethnicity, gender), face_info["face_file"])
         return object_ids, object_points, object_descs
 
     def randomize_image_background(self, img_path):
