@@ -81,7 +81,8 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
 
     args:
         runs_file: string, either run log or folder containing run logs.
-
+        cmd_subsets: list of list of commands. empty list [] means every command.
+        subset_names: list of names of subsets for save folders
     '''
 
     save_path=runs_file+"_plots/"
@@ -332,6 +333,6 @@ if __name__ == '__main__':
     options, args = parser.parse_args()
     print(options)
 
-    get_stats_for_run(options.runs_file, [["pack the man in the brown box"], []], ["lawyer", "all"])
+    get_stats_for_run(options.runs_file, [["pack the man in the brown box"], []], ["man", "all"])
     
     
