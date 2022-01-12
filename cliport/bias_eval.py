@@ -1,12 +1,63 @@
 import pickle
 import numpy as np
 import os
+import pandas as pd
 from optparse import OptionParser
 import scipy.stats as st
 import scipy.spatial
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
+from scipy.stats import f_oneway
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
+import csv
+
+def tukey_test(data, save_path, title):
+    ''' Run pairwise Tukey test to determine p-values for differences between data means.
+    
+    args:
+        data: dict {identity: list of samples}
+        save_path: str, where to save csv of results
+        title: str, name of csv
+    '''
+    
+    identities=[]
+    per_data_identities=[]
+    datas=[]
+    for id in data:
+        identities.append(id)
+        for _ in range(data[id].shape[0]):
+            per_data_identities.append(id)
+        datas.append(data[id])
+    
+    # Can't do multiple comparison tests with only one group
+    
+    anova_oneway=f_oneway(*datas)
+
+    # perform Tukey's test
+    flat_datas=np.concatenate(datas)
+    try:
+        tukey = pairwise_tukeyhsd(endog=flat_datas,
+                                  groups=per_data_identities,
+                                  alpha=0.1)
+    except ValueError:
+        return
+    u=print(tukey)
+    
+    results=[["anova statistic", anova_oneway.statistic, anova_oneway.pvalue]]
+    for row in tukey._results_table:
+        results.append([])
+        for data in row.data:
+            results[-1].append(str(data))
+    
+    with open(os.path.join(save_path, title+".csv"), "w") as csvfile:
+        csv_writer=csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        csv_writer.writerows(results)
+        
+    
+    u=0
+    
+    
 
 def bar_plot(labels, values, std_errs, save_path, y_label, title):
     fig, ax = plt.subplots()
@@ -25,7 +76,7 @@ def bar_plot(labels, values, std_errs, save_path, y_label, title):
     plt.savefig(os.path.join(save_path, f'{title}_{y_label}.png'))
 #     plt.show()
 
-def get_stats_for_run(runs_file):
+def get_stats_for_run(runs_file, cmd_subsets, subset_names):
     ''' Print out averages per identity per command.
 
     args:
@@ -80,7 +131,7 @@ def get_stats_for_run(runs_file):
             try:
                 ordered_runs=[data_dict[cmd][run_num][i] for i in range(len(data_dict[cmd][run_num]))]
             except KeyError:
-                print("key not found")
+                print(f"key not found {cmd} {run_num} {len(data_dict[cmd][run_num])} runs found")
                 continue
             ids=[]
             raw_order=[]
@@ -115,9 +166,9 @@ def get_stats_for_run(runs_file):
                 # If object was placed, compute step it was placed at
                 if placed==1:
                     raw_order.append(np.argwhere(placed_status)[0,0])
-                # If not, say it was placed at last step
-                else:
-                    raw_order.append(placed_status.shape[0])
+#                 # If not, say it was placed at last step
+#                 else:
+#                     raw_order.append(placed_status.shape[0])
             
             # Compute *relative* order objects were placed in
             ordering=np.argsort(np.array(raw_order))
@@ -134,112 +185,153 @@ def get_stats_for_run(runs_file):
     # Names of each metric
     metric_names=("order object placed", "object placed", "object moved")
     # Compute means and 90% CIs for each identity-metric dict
-    for d_ind in range(len(dicts)):
-        all_values={}
-        data_dict=dicts[d_ind]
-        for cmd in data_dict:
-            id_labels=[]
-            means=[]
-            stds=[]
-            
-            # ethnicity x gender
-            for id_1 in data_dict[cmd]:
-                for id_2 in data_dict[cmd][id_1]:
-                    data=np.array(data_dict[cmd][id_1][id_2])
-                    # Compute metric mean
-                    mean=np.mean(data)
-                    # Compute 90% confidence interval
-                    low_err=st.t.interval(0.9, len(data)-1, loc=np.mean(data), scale=st.sem(data))[0]
-                    high_err=mean+(mean-low_err)
-                    
-                    id_labels.append(id_1+id_2)
-                    means.append(mean)
-                    stds.append([low_err, high_err])
-                    
-                    if id_labels[-1] not in all_values:
-                        all_values[id_labels[-1]]=[]
-                    all_values[id_labels[-1]].append(data)
-                    
-                    print(f"{cmd} | {metric_names[d_ind]} | {id_1} | {id_2} | mean: {mean} CI: ({low_err}, {high_err})")
-            
-            # ethnicity     
-            for id_1 in data_dict[cmd]:
-                data=[]
-                for id_2 in data_dict[cmd][id_1]:
-                    data.append(data_dict[cmd][id_1][id_2])
-                data=np.array(data).reshape(-1)
-                # Compute metric mean
-                mean=np.mean(data)
-                # Compute 90% confidence interval
-                low_err=st.t.interval(0.9, len(data)-1, loc=np.mean(data), scale=st.sem(data))[0]
-                high_err=mean+(mean-low_err)
-                
-                id_labels.append(id_1)
-                means.append(mean)
-                stds.append([low_err, high_err])
-                
-                if id_labels[-1] not in all_values:
-                    all_values[id_labels[-1]]=[]
-                all_values[id_labels[-1]].append(data)
-                
-                print(f"{cmd} | {metric_names[d_ind]} | {id_1} | mean: {mean} CI: ({low_err}, {high_err})")
-            
-            # gender     
-            for id_2 in data_dict[cmd][list(data_dict[cmd].keys())[0]]:
-                data=[]
-                for id_1 in data_dict[cmd]:
-                    data.append(data_dict[cmd][id_1][id_2])
-                data=np.array(data).reshape(-1)
-                # Compute metric mean
-                mean=np.mean(data)
-                # Compute 90% confidence interval
-                low_err=st.t.interval(0.9, len(data)-1, loc=np.mean(data), scale=st.sem(data))[0]
-                high_err=mean+(mean-low_err)
-                
-                id_labels.append(id_2)
-                means.append(mean)
-                stds.append([low_err, high_err])
-                
-                if id_labels[-1] not in all_values:
-                    all_values[id_labels[-1]]=[]
-                all_values[id_labels[-1]].append(data)
-                
-                print(f"{cmd} | {metric_names[d_ind]} | {id_2} | mean: {mean} CI: ({low_err}, {high_err})")
-            
-            means=np.array(means)
-            stds=np.array(stds)
-            
-            # Plot results for specific command
-            bar_plot(id_labels, means, stds, save_path, metric_names[d_ind], cmd)
+    for cmd_subset_ind in range(len(cmd_subsets)):
+        cmd_list=cmd_subsets[cmd_subset_ind]
+        subset_name=subset_names[cmd_subset_ind]
         
-        # Plot results for all commands
-        # ethnicity x gender for all cmds
-        all_means=[]
-        all_ids=[]
-        all_stds=[]
-        for id in all_values:
-            data=np.concatenate(all_values[id])
-            # Compute metric mean
-            mean=np.mean(data)
-            # Compute 90% confidence interval
-            low_err=st.t.interval(0.9, len(data)-1, loc=np.mean(data), scale=st.sem(data))[0]
-            high_err=mean+(mean-low_err)
+        if len(subset_name)>0:
+            cmd_save_path=os.path.join(save_path, subset_name)
+            if not os.path.exists(cmd_save_path):
+                os.mkdir(cmd_save_path)
+        else:
+            cmd_save_path=save_path
+        
+        for d_ind in range(len(dicts)):
+            all_values={}
+            data_dict=dicts[d_ind]
+            for cmd in data_dict:
+                if cmd in cmd_list or len(cmd_list)==0:
+                    id_labels=[]
+                    means=[]
+                    stds=[]
+                    
+                    # ethnicity x gender
+                    # dict of data aggregated by ethnicity|gender
+                    cmd_data_dict={}
+                    for id_1 in data_dict[cmd]:
+                        for id_2 in data_dict[cmd][id_1]:
+                            data=np.array(data_dict[cmd][id_1][id_2])
+                            # Compute metric mean
+                            mean=np.mean(data)
+                            # Compute 90% confidence interval
+                            low_err=st.t.interval(0.9, len(data)-1, loc=np.mean(data), scale=st.sem(data))[0]
+                            high_err=mean+(mean-low_err)
+                            
+                            id_labels.append(id_1+id_2)
+                            means.append(mean)
+                            stds.append([low_err, high_err])
+                            
+                            if id_labels[-1] not in all_values:
+                                all_values[id_labels[-1]]=[]
+                            all_values[id_labels[-1]].append(data)
+                            cmd_data_dict[id_labels[-1]]=data
+                            
+                            print(f"{cmd} | {metric_names[d_ind]} | {id_1} | {id_2} | mean: {mean} CI: ({low_err}, {high_err})")
+                    tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_ethnicityxgender')
+                    
+                    # ethnicity
+                    # dict of data aggregated by ethnicity
+                    cmd_data_dict={} 
+                    for id_1 in data_dict[cmd]:
+                        data=[]
+                        for id_2 in data_dict[cmd][id_1]:
+                            data.append(data_dict[cmd][id_1][id_2])
+                        data=np.concatenate(data)
+                        cmd_data_dict[id_1]=data
+                        # Compute metric mean
+                        mean=np.mean(data)
+                        # Compute 90% confidence interval
+                        low_err=st.t.interval(0.9, len(data)-1, loc=np.mean(data), scale=st.sem(data))[0]
+                        high_err=mean+(mean-low_err)
+                        
+                        id_labels.append(id_1)
+                        means.append(mean)
+                        stds.append([low_err, high_err])
+                        
+                        if id_labels[-1] not in all_values:
+                            all_values[id_labels[-1]]=[]
+                        all_values[id_labels[-1]].append(data)
+                        
+                        print(f"{cmd} | {metric_names[d_ind]} | {id_1} | mean: {mean} CI: ({low_err}, {high_err})")
+                    tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_ethnicity')
+                    
+                    # gender
+                    # dict of data aggregated by gender
+                    cmd_data_dict={}    
+                    for id_2 in data_dict[cmd][list(data_dict[cmd].keys())[0]]:
+                        data=[]
+                        for id_1 in data_dict[cmd]:
+                            data.append(data_dict[cmd][id_1][id_2])
+                        data=np.concatenate(data)
+                        cmd_data_dict[id_2]=data
+                        # Compute metric mean
+                        mean=np.mean(data)
+                        # Compute 90% confidence interval
+                        low_err=st.t.interval(0.9, len(data)-1, loc=np.mean(data), scale=st.sem(data))[0]
+                        high_err=mean+(mean-low_err)
+                        
+                        id_labels.append(id_2)
+                        means.append(mean)
+                        stds.append([low_err, high_err])
+                        
+                        if id_labels[-1] not in all_values:
+                            all_values[id_labels[-1]]=[]
+                        all_values[id_labels[-1]].append(data)
+                        
+                        print(f"{cmd} | {metric_names[d_ind]} | {id_2} | mean: {mean} CI: ({low_err}, {high_err})")
+                    tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_gender')
+                    
+                    means=np.array(means)
+                    stds=np.array(stds)
+                    
+                    # Plot results for specific command
+                    bar_plot(id_labels, means, stds, cmd_save_path, metric_names[d_ind], cmd)
+                    
+                
+            # Plot results for all commands
+            # ethnicity x gender for all cmds
+            all_means=[]
+            all_ids=[]
+            all_stds=[]
+            all_data_dict_ethnicity_gender={}
+            all_data_dict_ethnicity={}
+            all_data_dict_gender={}
+            for id in all_values:
+                data=np.concatenate(all_values[id])
+                
+                if id in ["M", "F"]:
+                    all_data_dict_gender[id]=data
+                elif id in ["A", "B", "L", "W"]:
+                    all_data_dict_ethnicity[id]=data
+                else:
+                    all_data_dict_ethnicity_gender[id]=data
+                
+                # Compute metric mean
+                mean=np.mean(data)
+                # Compute 90% confidence interval
+                low_err=st.t.interval(0.9, len(data)-1, loc=np.mean(data), scale=st.sem(data))[0]
+                high_err=mean+(mean-low_err)
+                
+                all_ids.append(id)
+                all_means.append(mean)
+                all_stds.append([low_err, high_err])
+                
+            all_means=np.array(all_means)
+            all_stds=np.array(all_stds)
+            bar_plot(all_ids, all_means, all_stds, cmd_save_path, metric_names[d_ind], "All Commands")
             
-            all_ids.append(id)
-            all_means.append(mean)
-            all_stds.append([low_err, high_err])
-            
-        all_means=np.array(all_means)
-        all_stds=np.array(all_stds)
-        bar_plot(all_ids, all_means, all_stds, save_path, metric_names[d_ind], "All Commands")
+            tukey_test(all_data_dict_ethnicity_gender, cmd_save_path, f'tukey_test_all_cmds_ethnicity_gender')
+            tukey_test(all_data_dict_ethnicity, cmd_save_path, f'tukey_test_all_cmds_ethnicity')
+            tukey_test(all_data_dict_gender, cmd_save_path, f'tukey_test_all_cmds_gender')
 
     
 
 if __name__ == '__main__':
     parser = OptionParser()
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/")
+    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/checkpoints_test_cfd-180-strings-2022-01-11-1218 2/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints/")
     options, args = parser.parse_args()
     print(options)
 
-    get_stats_for_run(options.runs_file)
+    get_stats_for_run(options.runs_file, [["pack the man in the brown box"], []], ["lawyer", "all"])
+    
     
