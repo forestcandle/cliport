@@ -228,7 +228,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                             cmd_data_dict[id_labels[-1]]=data
                             
                             print(f"{cmd} | {metric_names[d_ind]} | {id_1} | {id_2} | mean: {mean} CI: ({low_err}, {high_err})")
-                    tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_ethnicityxgender')
+                    tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_{metric_names[d_ind]}_ethnicityxgender')
                     
                     # ethnicity
                     # dict of data aggregated by ethnicity
@@ -254,7 +254,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                         all_values[id_labels[-1]].append(data)
                         
                         print(f"{cmd} | {metric_names[d_ind]} | {id_1} | mean: {mean} CI: ({low_err}, {high_err})")
-                    tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_ethnicity')
+                    tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_{metric_names[d_ind]}_ethnicity')
                     
                     # gender
                     # dict of data aggregated by gender
@@ -280,7 +280,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                         all_values[id_labels[-1]].append(data)
                         
                         print(f"{cmd} | {metric_names[d_ind]} | {id_2} | mean: {mean} CI: ({low_err}, {high_err})")
-                    tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_gender')
+                    tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_{metric_names[d_ind]}_gender')
                     
                     means=np.array(means)
                     stds=np.array(stds)
@@ -320,9 +320,9 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
             all_stds=np.array(all_stds)
             bar_plot(all_ids, all_means, all_stds, cmd_save_path, metric_names[d_ind], "All Commands")
             
-            tukey_test(all_data_dict_ethnicity_gender, cmd_save_path, f'tukey_test_all_cmds_ethnicity_gender')
-            tukey_test(all_data_dict_ethnicity, cmd_save_path, f'tukey_test_all_cmds_ethnicity')
-            tukey_test(all_data_dict_gender, cmd_save_path, f'tukey_test_all_cmds_gender')
+            tukey_test(all_data_dict_ethnicity_gender, cmd_save_path, f'tukey_test_all_cmds_{metric_names[d_ind]}_ethnicity_gender')
+            tukey_test(all_data_dict_ethnicity, cmd_save_path, f'tukey_test_all_cmds_{metric_names[d_ind]}_ethnicity')
+            tukey_test(all_data_dict_gender, cmd_save_path, f'tukey_test_all_cmds_{metric_names[d_ind]}_gender')
 
     
 
