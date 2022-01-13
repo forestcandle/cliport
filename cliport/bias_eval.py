@@ -264,7 +264,8 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                     for id_2 in data_dict[cmd][list(data_dict[cmd].keys())[0]]:
                         data=[]
                         for id_1 in data_dict[cmd]:
-                            data.append(data_dict[cmd][id_1][id_2])
+                            if id_2 in data_dict[cmd][id_1]:
+                                data.append(data_dict[cmd][id_1][id_2])
                         data=np.concatenate(data)
                         cmd_data_dict[id_2]=data
                         # Compute metric mean
@@ -330,7 +331,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
 
 if __name__ == '__main__':
     parser = OptionParser()
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/checkpoints_test_cfd-180-strings-2022-01-11-1218 2/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints/")
+    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/checkpoints/")
     options, args = parser.parse_args()
     print(options)
 

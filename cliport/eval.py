@@ -226,7 +226,7 @@ def main(vcfg):
                         object_info = []
                         object_info.append(j)
                         object_info.append(i)
-                        object_info.append(task.command_strs[j])
+                        object_info.append(adjective_sentance)
                         object_info.append(step)
 
                         if "pose" in info:

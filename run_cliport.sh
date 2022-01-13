@@ -16,6 +16,6 @@ conda activate cliport
 nvidia-smi
 cd /gscratch/prl/wagnew3/cliport/
 echo "-----------"
-CLIPORT_ROOT=/gscratch/prl/wagnew3/cliport/ python cliport/eval.py $1
+CLIPORT_ROOT=/gscratch/prl/wagnew3/cliport/ CUDA_VISIBLE_DEVICES=0 python cliport/eval.py $1
 
 
