@@ -10,6 +10,7 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 from scipy.stats import f_oneway
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
+from utils.command_strings import build_command_strings
 import csv
 
 def tukey_test(data, save_path, title):
@@ -350,5 +351,25 @@ if __name__ == '__main__':
     options, args = parser.parse_args()
     print(options)
 
-    get_stats_for_run(options.runs_file, [[]], ["all"])
+    # set plot font sizes from https://stackoverflow.com/a/39566040
+    SMALL_SIZE = 14
+    MEDIUM_SIZE = 18
+    BIGGER_SIZE = 20
+
+    plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+    plt.rc('axes', titlesize=BIGGER_SIZE)     # fontsize of the axes title
+    plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+    plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+    plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+
+    no_entity_commands = build_command_strings(entity_list=[''])
+    person_entity_commands = build_command_strings(entity_list=['person'])
+    block_entity_commands = build_command_strings(entity_list=['block'])
+    get_stats_for_run(options.runs_file, [[],no_entity_commands, person_entity_commands, block_entity_commands], ["all", 'no_entity', 'person', 'block'])
+    # get_stats_for_run(options.runs_file, [[]], ["all"])
+    # get_stats_for_run(options.runs_file, [block_entity_commands], ['block'])
+    # get_stats_for_run(options.runs_file, [person_entity_commands], ['person'])
+    # get_stats_for_run(options.runs_file, [no_entity_commands], ['no_entity'])
 
