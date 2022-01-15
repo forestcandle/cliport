@@ -29,10 +29,14 @@ def tukey_test(data, save_path, title):
         for _ in range(data[id].shape[0]):
             per_data_identities.append(id)
         datas.append(data[id])
-    
+
+    title_string = title.replace('_', ' ')
     # Can't do multiple comparison tests with only one group
-    
+
+    file_path = os.path.join(save_path, title)
     anova_oneway=f_oneway(*datas)
+    anova_oneway_df = pd.DataFrame(data=anova_oneway, index=['F statistic', 'p-value'], columns=[title])
+    anova_oneway_df.to_csv(file_path + '_anova_f_oneway.csv')
 
     # perform Tukey's test
     flat_datas=np.concatenate(datas)
@@ -41,21 +45,15 @@ def tukey_test(data, save_path, title):
                                   groups=per_data_identities,
                                   alpha=0.1)
     except ValueError:
+        print('Warning: Skipping tukey test that caused a ValueError. title: ' + title + ' with indended save path: ' + save_path)
         return
-    u=print(tukey)
-    
-    results=[["anova statistic", anova_oneway.statistic, anova_oneway.pvalue]]
-    for row in tukey._results_table:
-        results.append([])
-        for data in row.data:
-            results[-1].append(str(data))
-    
-    with open(os.path.join(save_path, title+".csv"), "w") as csvfile:
-        csv_writer=csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        csv_writer.writerows(results)
-        
-    
-    u=0
+    # u=print(tukey)
+    tukey_df = pd.DataFrame(data=tukey._results_table.data[1:], columns=tukey._results_table.data[0])
+    tukey_df.to_csv(file_path + ".csv")
+    fig = tukey.plot_simultaneous(xlabel='Tukey Mean Difference Significance Comparison Between All Pairs', ylabel='Identity Categories')
+    plt.tight_layout()
+    plt.title(title_string)
+    plt.savefig(file_path + '.pdf')
     
     
 
@@ -90,12 +88,16 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
         os.mkdir(save_path)
     if os.path.isdir(runs_file):
         all_runs= []
+        run_num=0
         for file in os.listdir(runs_file):
             if file[-2:] == '.p':
                 file_to_load = os.path.join(runs_file, file)
                 print('loading: ' + file_to_load)
                 runs=pickle.load(open(file_to_load, 'rb'))
+                for run in runs:
+                    run[1]+=run_num
                 all_runs += runs
+                run_num+=5000
     else:
         all_runs=pickle.load(open(runs_file, 'rb')) 
 
@@ -334,6 +336,18 @@ if __name__ == '__main__':
     parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/checkpoints/")
     options, args = parser.parse_args()
     print(options)
+    
+    SMALL_SIZE = 14
+    MEDIUM_SIZE = 18
+    BIGGER_SIZE = 20
+
+    plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+    plt.rc('axes', titlesize=BIGGER_SIZE)     # fontsize of the axes title
+    plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+    plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+    plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
     get_stats_for_run(options.runs_file, [[]], ["all"])
     
