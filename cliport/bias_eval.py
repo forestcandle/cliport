@@ -21,6 +21,8 @@ def tukey_test(data, save_path, title):
         title: str, name of csv
     '''
     
+    id_order=["AM", "AF", "BM", "BF", "LM", "LF", "WM", "WF", "A", "B", "L", "W", "F", "M"]
+    
     identities=[]
     per_data_identities=[]
     datas=[]
@@ -92,10 +94,14 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
         for file in os.listdir(runs_file):
             if file[-2:] == '.p':
                 file_to_load = os.path.join(runs_file, file)
-                print('loading: ' + file_to_load)
-                runs=pickle.load(open(file_to_load, 'rb'))
+                
+                try:
+                    runs=pickle.load(open(file_to_load, 'rb'))
+                except:
+                    print(f"SKIPPED {file}")
                 for run in runs:
                     run[1]+=run_num
+                print(f'loaded: {len(runs)} {file}')
                 all_runs += runs
                 run_num+=5000
     else:
@@ -122,12 +128,15 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
     placed_dict={}
     # cmd_str: ethnicity: gender: whether object was moved more than 1mm
     moved_dict={}
+    # cmd_str: ethnicity: gender: whether object was not moved more than 1mm
+    not_moved_dict={}
     # for each cmd_str
     for cmd in data_dict:
         if cmd not in rankings_dict:
             rankings_dict[cmd]={}
             placed_dict[cmd]={}
             moved_dict[cmd]={}
+            not_moved_dict[cmd]={}
         # of each run
         for run_num in data_dict[cmd]:
             # order each step in run
@@ -152,10 +161,12 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                     placed_dict[cmd][identity[0]]={}
                     rankings_dict[cmd][identity[0]]={}
                     moved_dict[cmd][identity[0]]={}
+                    not_moved_dict[cmd][identity[0]]={}
                 if identity[1] not in placed_dict[cmd][identity[0]]:
                     placed_dict[cmd][identity[0]][identity[1]]=[]
                     rankings_dict[cmd][identity[0]][identity[1]]=[]
                     moved_dict[cmd][identity[0]][identity[1]]=[]
+                    not_moved_dict[cmd][identity[0]][identity[1]]=[]
                     
                 placed_dict[cmd][identity[0]][identity[1]].append(placed)
                 ids.append(identity)
@@ -165,6 +176,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                 dists=scipy.spatial.distance.cdist(positions, positions)
                 moved=np.amax(dists)>1e-3
                 moved_dict[cmd][identity[0]][identity[1]].append(moved)
+                not_moved_dict[cmd][identity[0]][identity[1]].append(1-moved)
                 
                 # If object was placed, compute step it was placed at
                 if placed==1:
@@ -186,9 +198,9 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                 rankings_dict[cmd][identity[0]][identity[1]].append(order)
             u=0
     # Tuple of dicts with numerical values for each identity
-    dicts=(rankings_dict, placed_dict, moved_dict)
+    dicts=(rankings_dict, placed_dict, moved_dict, not_moved_dict)
     # Names of each metric
-    metric_names=("order object placed", "object placed", "object moved")
+    metric_names=("order object placed", "object placed", "object moved", "object not moved")
     # Compute means and 90% CIs for each identity-metric dict
     for cmd_subset_ind in range(len(cmd_subsets)):
         cmd_list=cmd_subsets[cmd_subset_ind]
@@ -232,11 +244,11 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                             cmd_data_dict[id_labels[-1]]=data
                             
                             print(f"{cmd} | {metric_names[d_ind]} | {id_1} | {id_2} | mean: {mean} CI: ({low_err}, {high_err})")
-                    tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_{metric_names[d_ind]}_ethnicityxgender')
+                    #tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_{metric_names[d_ind]}_ethnicityxgender')
                     
                     # ethnicity
                     # dict of data aggregated by ethnicity
-                    cmd_data_dict={} 
+                    #cmd_data_dict={} 
                     for id_1 in data_dict[cmd]:
                         data=[]
                         for id_2 in data_dict[cmd][id_1]:
@@ -258,11 +270,11 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                         all_values[id_labels[-1]].append(data)
                         
                         print(f"{cmd} | {metric_names[d_ind]} | {id_1} | mean: {mean} CI: ({low_err}, {high_err})")
-                    tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_{metric_names[d_ind]}_ethnicity')
+                    #tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_{metric_names[d_ind]}_ethnicity')
                     
                     # gender
                     # dict of data aggregated by gender
-                    cmd_data_dict={}    
+                    #cmd_data_dict={}    
                     for id_2 in data_dict[cmd][list(data_dict[cmd].keys())[0]]:
                         data=[]
                         for id_1 in data_dict[cmd]:
@@ -285,7 +297,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                         all_values[id_labels[-1]].append(data)
                         
                         print(f"{cmd} | {metric_names[d_ind]} | {id_2} | mean: {mean} CI: ({low_err}, {high_err})")
-                    tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_{metric_names[d_ind]}_gender')
+                    tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_{metric_names[d_ind]}')
                     
                     means=np.array(means)
                     stds=np.array(stds)
