@@ -45,6 +45,7 @@ def tukey_test(data, save_path, title):
         tukey = pairwise_tukeyhsd(endog=flat_datas,
                                   groups=per_data_identities,
                                   alpha=0.1)
+        tukey._simultaneous_ci()
     except ValueError:
         print('Warning: Skipping tukey test that caused a ValueError. title: ' + title + ' with indended save path: ' + save_path)
         return
@@ -56,16 +57,20 @@ def tukey_test(data, save_path, title):
     plt.title(title_string)
     plt.savefig(file_path + '.pdf')
 
-    # results=[["anova statistic", anova_oneway.statistic, anova_oneway.pvalue]]
-    # for row in tukey._results_table:
-    #     results.append([])
-    #     for data in row.data:
-    #         results[-1].append(str(data))
-
-    # with open(os.path.join(save_path, title+".csv"), "w") as csvfile:
-    #     csv_writer=csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-    #     csv_writer.writerows(results)
-    # u=0
+    results=[["anova statistic", anova_oneway.statistic, anova_oneway.pvalue]]
+    for row in tukey._results_table:
+        results.append([])
+        for data in row.data:
+            results[-1].append(str(data))
+    
+    results.append(["Tukey Simultanious CI"])
+    results.append(np.ndarray.tolist(tukey.groupsunique))
+    results.append(np.ndarray.tolist(tukey.halfwidths))
+ 
+    with open(os.path.join(save_path, title+".csv"), "w") as csvfile:
+        csv_writer=csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        csv_writer.writerows(results)
+    u=0
 
 
 def bar_plot(labels, values, std_errs, save_path, y_label, title):
@@ -139,6 +144,8 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
     moved_dict={}
     # cmd_str: ethnicity: gender: whether object was not moved more than 1mm
     not_moved_dict={}
+    # cmd str: any object moved during trial
+    not_moved_any_dict={}
     # for each cmd_str
     for cmd in data_dict:
         if cmd not in rankings_dict:
@@ -146,6 +153,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
             placed_dict[cmd]={}
             moved_dict[cmd]={}
             not_moved_dict[cmd]={}
+            not_moved_any_dict[cmd]=[]
         # of each run
         for run_num in data_dict[cmd]:
             # order each step in run
@@ -157,6 +165,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
             ids=[]
             raw_order=[]
             # for each object
+            any_moved=0
             for obj_ind in range(4, len(ordered_runs[0]), 3):
                 #compute metrics for that object
                 identity=ordered_runs[0][obj_ind][0]
@@ -184,6 +193,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                 positions=np.array([ordered_runs[i][obj_ind+1][0] for i in range(len(ordered_runs))])
                 dists=scipy.spatial.distance.cdist(positions, positions)
                 moved=np.amax(dists)>1e-3
+                any_moved=max(moved, any_moved)
                 moved_dict[cmd][identity[0]][identity[1]].append(moved)
                 not_moved_dict[cmd][identity[0]][identity[1]].append(1-moved)
                 
@@ -206,6 +216,14 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                 identity=ids[ind]
                 rankings_dict[cmd][identity[0]][identity[1]].append(order)
             u=0
+            not_moved_any_dict[cmd].append(any_moved)
+    
+    means_dict={}
+    for cmd in not_moved_any_dict:
+        mean=np.mean(np.array(not_moved_any_dict[cmd]))
+        means_dict[cmd]=[mean]
+    df_not_moved_any_dict=pd.DataFrame.from_dict(means_dict)
+    df_not_moved_any_dict.to_csv(os.path.join(save_path, "moved_any_object_by_command.csv"))
     # Tuple of dicts with numerical values for each identity
     dicts=(rankings_dict, placed_dict, moved_dict, not_moved_dict)
     # Names of each metric
@@ -354,7 +372,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
 
 if __name__ == '__main__':
     parser = OptionParser()
-    parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
+    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/packing-unseen-google-objects-race-seq-cliport-n100-multi-results-test.json.p")
     options, args = parser.parse_args()
     print(options)
 
