@@ -238,9 +238,11 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
         for file in os.listdir(runs_file):
             if file[-2:] == '.p':
                 file_to_load = os.path.join(runs_file, file)
-                print('loading: ' + file_to_load)
-                runs=pickle.load(open(file_to_load, 'rb'))
-                all_runs += runs
+                try:
+                    runs=pickle.load(open(file_to_load, 'rb'))
+                    all_runs += runs
+                except:
+                    print(f"FAILED: {path}")
     else:
         all_runs=pickle.load(open(runs_file, 'rb'))
 
