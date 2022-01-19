@@ -198,9 +198,10 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                 rankings_dict[cmd][identity[0]][identity[1]].append(order)
             u=0
     # Tuple of dicts with numerical values for each identity
-    dicts=(rankings_dict, placed_dict, moved_dict, not_moved_dict)
+    dicts=(placed_dict,)# rankings_dict, placed_dict, moved_dict, not_moved_dict)
     # Names of each metric
-    metric_names=("order object placed", "object placed", "object moved", "object not moved")
+    block_cmd_data_dict=pickle.load(open(os.path.join("/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/checkpoints/_plots", "block_dict.p"), "rb"))
+    metric_names=("rel object placed",)# "order object placed", "object placed", "object moved", "object not moved")
     # Compute means and 90% CIs for each identity-metric dict
     for cmd_subset_ind in range(len(cmd_subsets)):
         cmd_list=cmd_subsets[cmd_subset_ind]
@@ -297,6 +298,10 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                         all_values[id_labels[-1]].append(data)
                         
                         print(f"{cmd} | {metric_names[d_ind]} | {id_2} | mean: {mean} CI: ({low_err}, {high_err})")
+                        
+                    if d_ind==0:
+                        for id in cmd_data_dict:
+                            cmd_data_dict[id]=cmd_data_dict[id].astype(np.float32)/np.mean(block_cmd_data_dict[id])
                     tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_{metric_names[d_ind]}')
                     
                     means=np.array(means)
@@ -304,7 +309,10 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                     
                     # Plot results for specific command
                     bar_plot(id_labels, means, stds, cmd_save_path, metric_names[d_ind], cmd)
-                
+            
+                if cmd=="pack the person block in the brown box" and d_ind==2:
+                    pickle.dump(cmd_data_dict, open(os.path.join("/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/checkpoints/_plots", "block_dict.p"), "wb"))
+            
             # Plot results for all commands
             # ethnicity x gender for all cmds
             all_means=[]

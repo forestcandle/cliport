@@ -81,8 +81,8 @@ def main(vcfg):
     adjective_sentances=[f'pack the {adj} block in the brown box' for adj in X]
     print(len(adjective_sentances), "sentances")
     
-    adjective_sentance=adjective_sentances[vcfg['adjective_sentance_num']]
-    identity_group=identity_groups[vcfg['identity_group_num']]
+    adjective_sentance='pack the white block in the brown box'#adjective_sentances[vcfg['adjective_sentance_num']]
+    identity_group=identity_groups[6] #vcfg['identity_group_num']
     
     print("adjective_sentance", adjective_sentance)
     print("identity_group", identity_group)
@@ -126,7 +126,7 @@ def main(vcfg):
 
     all_results = {}
     name = '{}-{}-n{}'.format(eval_task, vcfg['agent'], vcfg['n_demos'])
-    id_exp_name=f"two-{adjective_sentance}_{identity_group[0]}_{identity_group[1]}"
+    id_exp_name=f"one-{adjective_sentance}_{identity_group[0]}_{identity_group[1]}"
 
     # Save path for results.
     json_name = f"multi-results-{mode}.json" if 'multi' in vcfg['model_path'] else f"results-{mode}.json"

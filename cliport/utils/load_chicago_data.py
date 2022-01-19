@@ -28,7 +28,7 @@ def load_chicago_dataset(chicago_datasets_root=None):
     
     face_dict={}
     identity_dict={}
-    sheet_nums=[1,2]
+    sheet_nums=[1]
     with pd.ExcelFile(workbook_path, engine="openpyxl") as excel:
         for sheet_num in sheet_nums:
             workbook = pd.read_excel(excel, sheet_name=sheet_num).values
