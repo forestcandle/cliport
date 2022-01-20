@@ -249,7 +249,7 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
         fig, ax1 = utils.create_mpl_ax(ax)
         if figsize is not None:
             fig.set_size_inches(figsize)
-        
+
         means=np.array(new_means)
         errs=np.array(new_errs)
 
@@ -313,20 +313,20 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
 #                 ordering[ids_in_test.index(id)]=added
 #                 test_ordered_ids.append(id)
 #                 added+=1
-# 
+#
 #         fig, ax1 = utils.create_mpl_ax(ax)
 #         if figsize is not None:
 #             fig.set_size_inches(figsize)
 #         if getattr(tukey_hsd_results, 'halfwidths', None) is None:
 #             tukey_hsd_results._simultaneous_ci()
 #         means = tukey_hsd_results._multicomp.groupstats.groupmean
-# 
-# 
+#
+#
 #         sigidx = []
 #         nsigidx = []
 #         minrange = [means[i] - tukey_hsd_results.halfwidths[i] for i in range(len(means))]
 #         maxrange = [means[i] + tukey_hsd_results.halfwidths[i] for i in range(len(means))]
-# 
+#
 #         if comparison_name is None:
 #             ax1.errorbar(means[ordering], lrange(len(means)), xerr=tukey_hsd_results.halfwidths[ordering],
 #                          marker='o', linestyle='None', color='k', ecolor='k')
@@ -359,7 +359,7 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
 #                 ax1.errorbar(means[nsigidx], nsigidx,
 #                              xerr=tukey_hsd_results.halfwidths[nsigidx], marker='o',
 #                              linestyle='None', color='0.5', ecolor='0.5')
-# 
+#
 #         ax1.set_title('Multiple Comparisons Between All Pairs (Tukey)')
 #         r = np.max(maxrange) - np.min(minrange)
 #         ax1.set_ylim([-1, tukey_hsd_results._multicomp.ngroups])
@@ -432,7 +432,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
         run_num=0
         for file in os.listdir(runs_file):
             if file[-2:] == '.p':
-                file_to_load = os.path.join(runs_file, file)    
+                file_to_load = os.path.join(runs_file, file)
 
                 try:
                     runs=pickle.load(open(file_to_load, 'rb'))
@@ -697,7 +697,8 @@ if __name__ == '__main__':
     parser = OptionParser()
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/criminal/")
+    parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-20-pairwise-checkpoints-cfd/checkpoints")
+    # parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/criminal/")
 
     options, args = parser.parse_args()
     print(options)
