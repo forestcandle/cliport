@@ -301,11 +301,13 @@ def bar_plot(labels, values, std_errs, save_path, y_label, title):
     new_values=[]
     
     # Make sure id order is consistant
+    add_ind=0
     for ind in range(len(ordered_ids)):
         id=ordered_ids[ind]
         if id in labels:
             new_labels.append(id)
-            new_values.append(values[ind])
+            new_values.append(values[add_ind])
+            add_ind+=1
     labels=new_labels
     values=np.array(new_values)  
     
@@ -350,8 +352,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
         run_num=0
         for file in os.listdir(runs_file):
             if file[-2:] == '.p':
-                file_to_load = os.path.join(runs_file, file)
-                
+                file_to_load = os.path.join(runs_file, file)    
                 try:
                     runs=pickle.load(open(file_to_load, 'rb'))
                 except:
@@ -615,7 +616,7 @@ if __name__ == '__main__':
     parser = OptionParser()
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/checkpoints_test_cfd-180-strings-2022-01-11-1218 2/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
+    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/checkpoints_test_cfd-180-strings-2022-01-11-1218 2/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints/")
     options, args = parser.parse_args()
     print(options)
 
