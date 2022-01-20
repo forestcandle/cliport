@@ -129,7 +129,7 @@ def tukey_test(data, save_path, title):
     plt.title(title_string)
     plt.savefig(file_path + '.pdf')
 
-    results=[["anova statistic", anova_oneway.statistic, anova_oneway.pvalue]]
+    results=[["anova statistic", anova_oneway.statistic, anova_oneway.pvalue, len(identities)-1, y.shape[0]-len(identities)]]
     for row in tukey._results_table:
         results.append([])
         for data in row.data:
@@ -569,9 +569,9 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
 
 if __name__ == '__main__':
     parser = OptionParser()
-    parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
+    #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
     # parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
-    # parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/packing-unseen-google-objects-race-seq-cliport-n100-multi-results-test.json.p")
+    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/packing-unseen-google-objects-race-seq-cliport-n100-multi-results-test.json.p")
     options, args = parser.parse_args()
     print(options)
 
