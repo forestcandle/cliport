@@ -12,6 +12,73 @@ from scipy.stats import f_oneway
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from utils.command_strings import build_command_strings
 import csv
+import statsmodels.api as sm
+import sklearn.preprocessing
+from sklearn.linear_model import LinearRegression
+from scipy import stats
+
+def ols_test(X, y):
+    X_constant = sm.add_constant(X)
+    lin_reg = sm.OLS(y,X_constant).fit()
+    return lin_reg.pvalues
+
+def breusch_pagan_test(x, y):
+    '''
+    Breusch-Pagan test for heteroskedasticity in a linear regression model:
+    H_0 = No heteroskedasticity.
+    H_1 = Heteroskedasticity is present.
+
+    Inputs:
+    x = a numpy.ndarray containing the predictor variables. Shape = (nSamples, nPredictors).
+    y = a 1D numpy.ndarray containing the response variable. Shape = (nSamples, ).
+
+    Outputs a list containing three elements:
+    1. the Breusch-Pagan test statistic.
+    2. the p-value for the test.
+    3. the test result.
+    '''
+
+    if y.ndim != 1:
+        raise SystemExit('Error: y has more than 1 dimension.')
+    if x.shape[0] != y.shape[0]:
+        raise SystemExit('Error: the number of samples differs between x and y.')
+    else:
+        n_samples = y.shape[0]
+
+    # fit an OLS linear model to y using x:
+    lm = LinearRegression()
+    lm.fit(x, y)
+
+    # calculate the squared errors:
+    err = (y - lm.predict(x))**2
+
+    # fit an auxiliary regression to the squared errors:
+    # why?: to estimate the variance in err explained by x
+    lm.fit(x, err)
+    pred_err = lm.predict(x)
+    del lm
+
+    # calculate the coefficient of determination:
+    ss_tot = sum((err - np.mean(err))**2)
+    ss_res = sum((err - pred_err)**2)
+    r2 = 1 - (ss_res / ss_tot)
+    del err, pred_err, ss_res, ss_tot
+
+    # calculate the Lagrange multiplier:
+    LM = n_samples * r2
+    del r2
+
+    # calculate p-value. degrees of freedom = number of predictors.
+    # this is equivalent to (p - 1) parameter restrictions in Wikipedia entry.
+    pval = stats.distributions.chi2.sf(LM, x.shape[1])
+
+    if pval < 0.01:
+        test_result = 'Heteroskedasticity present at 99% CI.'
+    elif pval < 0.05:
+        test_result = 'Heteroskedasticity present at 95% CI.'
+    else:
+        test_result = 'No significant heteroskedasticity.'
+    return [LM, pval, test_result]
 
 def tukey_test(data, save_path, title):
     ''' Run pairwise Tukey test to determine p-values for differences between data means.
@@ -30,6 +97,11 @@ def tukey_test(data, save_path, title):
         for _ in range(data[id].shape[0]):
             per_data_identities.append(id)
         datas.append(data[id])
+        
+    one_hot_ids=sklearn.preprocessing.OneHotEncoder(sparse=False).fit_transform(np.array(per_data_identities).reshape(-1, 1))
+    y=np.concatenate(datas)
+    ols_pvalues=ols_test(one_hot_ids, y)
+    LM, bp_pval, test_result=breusch_pagan_test(one_hot_ids, y)
 
     title_string = title.replace('_', ' ')
     # Can't do multiple comparison tests with only one group
@@ -66,6 +138,7 @@ def tukey_test(data, save_path, title):
     results.append(["Tukey Simultanious CI"])
     results.append(np.ndarray.tolist(tukey.groupsunique))
     results.append(np.ndarray.tolist(tukey.halfwidths))
+    results.append(["OLS min p value", np.amax(ols_pvalues), "bptest p value", bp_pval])
  
     with open(os.path.join(save_path, title+".csv"), "w") as csvfile:
         csv_writer=csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
