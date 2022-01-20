@@ -134,16 +134,138 @@ def tukey_test(data, save_path, title):
         results.append([])
         for data in row.data:
             results[-1].append(str(data))
-    
+
     results.append(["Tukey Simultanious CI"])
     results.append(np.ndarray.tolist(tukey.groupsunique))
     results.append(np.ndarray.tolist(tukey.halfwidths))
     results.append(["OLS min p value", np.amax(ols_pvalues), "bptest p value", bp_pval])
- 
     with open(os.path.join(save_path, title+".csv"), "w") as csvfile:
         csv_writer=csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
         csv_writer.writerows(results)
     u=0
+
+
+def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, figsize=(10,6),
+                          xlabel=None, ylabel=None):
+        """Plot a universal confidence interval of each group mean
+
+        Visualize significant differences in a plot with one confidence
+        interval per group instead of all pairwise confidence intervals.
+
+        Parameters
+        ----------
+        comparison_name : str, optional
+            if provided, plot_intervals will color code all groups that are
+            significantly different from the comparison_name red, and will
+            color code insignificant groups gray. Otherwise, all intervals will
+            just be plotted in black.
+        ax : matplotlib axis, optional
+            An axis handle on which to attach the plot.
+        figsize : tuple, optional
+            tuple for the size of the figure generated
+        xlabel : str, optional
+            Name to be displayed on x axis
+        ylabel : str, optional
+            Name to be displayed on y axis
+
+        Returns
+        -------
+        Figure
+            handle to figure object containing interval plots
+
+        Notes
+        -----
+        Multiple comparison tests are nice, but lack a good way to be
+        visualized. If you have, say, 6 groups, showing a graph of the means
+        between each group will require 15 confidence intervals.
+        Instead, we can visualize inter-group differences with a single
+        interval for each group mean. Hochberg et al. [1] first proposed this
+        idea and used Tukey's Q critical value to compute the interval widths.
+        Unlike plotting the differences in the means and their respective
+        confidence intervals, any two pairs can be compared for significance
+        by looking for overlap.
+
+        References
+        ----------
+        .. [*] Hochberg, Y., and A. C. Tamhane. Multiple Comparison Procedures.
+               Hoboken, NJ: John Wiley & Sons, 1987.
+
+        Examples
+        --------
+        >>> from statsmodels.examples.try_tukey_hsd import cylinders, cyl_labels
+        >>> from statsmodels.stats.multicomp import MultiComparison
+        >>> cardata = MultiComparison(cylinders, cyl_labels)
+        >>> results = cardata.tukeyhsd()
+        >>> results.plot_simultaneous()
+        <matplotlib.figure.Figure at 0x...>
+
+        This example shows an example plot comparing significant differences
+        in group means. Significant differences at the alpha=0.05 level can be
+        identified by intervals that do not overlap (i.e. USA vs Japan,
+        USA vs Germany).
+
+        >>> results.plot_simultaneous(comparison_name="USA")
+        <matplotlib.figure.Figure at 0x...>
+
+        Optionally provide one of the group names to color code the plot to
+        highlight group means different from comparison_name.
+        """
+        fig, ax1 = utils.create_mpl_ax(ax)
+        if figsize is not None:
+            fig.set_size_inches(figsize)
+        if getattr(tukey_hsd_results, 'halfwidths', None) is None:
+            tukey_hsd_results._simultaneous_ci()
+        means = tukey_hsd_results._multicomp.groupstats.groupmean
+
+
+        sigidx = []
+        nsigidx = []
+        minrange = [means[i] - tukey_hsd_results.halfwidths[i] for i in range(len(means))]
+        maxrange = [means[i] + tukey_hsd_results.halfwidths[i] for i in range(len(means))]
+
+        if comparison_name is None:
+            ax1.errorbar(means, lrange(len(means)), xerr=tukey_hsd_results.halfwidths,
+                         marker='o', linestyle='None', color='k', ecolor='k')
+        else:
+            if comparison_name not in tukey_hsd_results.groupsunique:
+                raise ValueError('comparison_name not found in group names.')
+            midx = np.where(tukey_hsd_results.groupsunique==comparison_name)[0][0]
+            for i in range(len(means)):
+                if tukey_hsd_results.groupsunique[i] == comparison_name:
+                    continue
+                if (min(maxrange[i], maxrange[midx]) -
+                                         max(minrange[i], minrange[midx]) < 0):
+                    sigidx.append(i)
+                else:
+                    nsigidx.append(i)
+            #Plot the main comparison
+            ax1.errorbar(means[midx], midx, xerr=tukey_hsd_results.halfwidths[midx],
+                         marker='o', linestyle='None', color='b', ecolor='b')
+            ax1.plot([minrange[midx]]*2, [-1, tukey_hsd_results._multicomp.ngroups],
+                     linestyle='--', color='0.7')
+            ax1.plot([maxrange[midx]]*2, [-1, tukey_hsd_results._multicomp.ngroups],
+                     linestyle='--', color='0.7')
+            #Plot those that are significantly different
+            if len(sigidx) > 0:
+                ax1.errorbar(means[sigidx], sigidx,
+                             xerr=tukey_hsd_results.halfwidths[sigidx], marker='o',
+                             linestyle='None', color='r', ecolor='r')
+            #Plot those that are not significantly different
+            if len(nsigidx) > 0:
+                ax1.errorbar(means[nsigidx], nsigidx,
+                             xerr=tukey_hsd_results.halfwidths[nsigidx], marker='o',
+                             linestyle='None', color='0.5', ecolor='0.5')
+
+        ax1.set_title('Multiple Comparisons Between All Pairs (Tukey)')
+        r = np.max(maxrange) - np.min(minrange)
+        ax1.set_ylim([-1, tukey_hsd_results._multicomp.ngroups])
+        ax1.set_xlim([np.min(minrange) - r / 10., np.max(maxrange) + r / 10.])
+        ylbls = [""] + tukey_hsd_results.groupsunique.astype(str).tolist() + [""]
+        ax1.set_yticks(np.arange(-1, len(means) + 1))
+        ax1.set_yticklabels(ylbls)
+        ax1.set_xlabel(xlabel if xlabel is not None else '')
+        ax1.set_ylabel(ylabel if ylabel is not None else '')
+        return fig, tukey_hsd_results
 
 
 def bar_plot(labels, values, std_errs, save_path, y_label, title):
@@ -244,11 +366,11 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
             for obj_ind in range(4, len(ordered_runs[0]), 3):
                 #compute metrics for that object
                 identity=ordered_runs[0][obj_ind][0]
-                
+
                 # Compute if an object was placed at all
                 placed_status=np.array([ordered_runs[i][obj_ind+2] for i in range(len(ordered_runs))])
                 placed=np.sum(placed_status)>0
-                
+
                 # Expand dicts as needed
                 if identity[0] not in placed_dict[cmd]:
                     placed_dict[cmd][identity[0]]={}
@@ -260,10 +382,10 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                     rankings_dict[cmd][identity[0]][identity[1]]=[]
                     moved_dict[cmd][identity[0]][identity[1]]=[]
                     not_moved_dict[cmd][identity[0]][identity[1]]=[]
-                    
+
                 placed_dict[cmd][identity[0]][identity[1]].append(placed)
                 ids.append(identity)
-                
+
                 #compute whether object moved
                 positions=np.array([ordered_runs[i][obj_ind+1][0] for i in range(len(ordered_runs))])
                 dists=scipy.spatial.distance.cdist(positions, positions)
@@ -271,14 +393,14 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                 any_moved=max(moved, any_moved)
                 moved_dict[cmd][identity[0]][identity[1]].append(moved)
                 not_moved_dict[cmd][identity[0]][identity[1]].append(1-moved)
-                
+
                 # If object was placed, compute step it was placed at
                 if placed==1:
                     raw_order.append(np.argwhere(placed_status)[0,0])
                 # If not, say it was placed at last step
                 else:
                     raw_order.append(placed_status.shape[0])
-            
+
             # Compute *relative* order objects were placed in
             ordering=np.argsort(np.array(raw_order))
             ranks=np.empty_like(ordering)
@@ -292,7 +414,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                 rankings_dict[cmd][identity[0]][identity[1]].append(order)
             u=0
             not_moved_any_dict[cmd].append(any_moved)
-    
+
     means_dict={}
     for cmd in not_moved_any_dict:
         mean=np.mean(np.array(not_moved_any_dict[cmd]))
@@ -307,14 +429,14 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
     for cmd_subset_ind in range(len(cmd_subsets)):
         cmd_list=cmd_subsets[cmd_subset_ind]
         subset_name=subset_names[cmd_subset_ind]
-        
+
         if len(subset_name)>0:
             cmd_save_path=os.path.join(save_path, subset_name)
             if not os.path.exists(cmd_save_path):
                 os.mkdir(cmd_save_path)
         else:
             cmd_save_path=save_path
-        
+
         for d_ind in range(len(dicts)):
             all_values={}
             data_dict=dicts[d_ind]
@@ -323,7 +445,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                     id_labels=[]
                     means=[]
                     stds=[]
-                    
+
                     # ethnicity x gender
                     # dict of data aggregated by ethnicity|gender
                     cmd_data_dict={}
@@ -335,22 +457,22 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                             # Compute 90% confidence interval
                             low_err=st.t.interval(0.9, len(data)-1, loc=np.mean(data), scale=st.sem(data))[0]
                             high_err=mean+(mean-low_err)
-                            
+
                             id_labels.append(id_1+id_2)
                             means.append(mean)
                             stds.append([low_err, high_err])
-                            
+
                             if id_labels[-1] not in all_values:
                                 all_values[id_labels[-1]]=[]
                             all_values[id_labels[-1]].append(data)
                             cmd_data_dict[id_labels[-1]]=data
-                            
+
                             print(f"{cmd} | {metric_names[d_ind]} | {id_1} | {id_2} | mean: {mean} CI: ({low_err}, {high_err})")
                     #tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_{metric_names[d_ind]}_ethnicityxgender')
-                    
+
                     # ethnicity
                     # dict of data aggregated by ethnicity
-                    #cmd_data_dict={} 
+                    #cmd_data_dict={}
                     for id_1 in data_dict[cmd]:
                         data=[]
                         for id_2 in data_dict[cmd][id_1]:
@@ -362,21 +484,21 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                         # Compute 90% confidence interval
                         low_err=st.t.interval(0.9, len(data)-1, loc=np.mean(data), scale=st.sem(data))[0]
                         high_err=mean+(mean-low_err)
-                        
+
                         id_labels.append(id_1)
                         means.append(mean)
                         stds.append([low_err, high_err])
-                        
+
                         if id_labels[-1] not in all_values:
                             all_values[id_labels[-1]]=[]
                         all_values[id_labels[-1]].append(data)
-                        
+
                         print(f"{cmd} | {metric_names[d_ind]} | {id_1} | mean: {mean} CI: ({low_err}, {high_err})")
                     #tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_{metric_names[d_ind]}_ethnicity')
-                    
+
                     # gender
                     # dict of data aggregated by gender
-                    #cmd_data_dict={}    
+                    #cmd_data_dict={}
                     for id_2 in data_dict[cmd][list(data_dict[cmd].keys())[0]]:
                         data=[]
                         for id_1 in data_dict[cmd]:
@@ -389,21 +511,21 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                         # Compute 90% confidence interval
                         low_err=st.t.interval(0.9, len(data)-1, loc=np.mean(data), scale=st.sem(data))[0]
                         high_err=mean+(mean-low_err)
-                        
+
                         id_labels.append(id_2)
                         means.append(mean)
                         stds.append([low_err, high_err])
-                        
+
                         if id_labels[-1] not in all_values:
                             all_values[id_labels[-1]]=[]
                         all_values[id_labels[-1]].append(data)
-                        
+
                         print(f"{cmd} | {metric_names[d_ind]} | {id_2} | mean: {mean} CI: ({low_err}, {high_err})")
                     tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_{metric_names[d_ind]}')
-                    
+
                     means=np.array(means)
                     stds=np.array(stds)
-                    
+
                     # Plot results for specific command
                     bar_plot(id_labels, means, stds, cmd_save_path, metric_names[d_ind], cmd)
 
@@ -447,7 +569,9 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
 
 if __name__ == '__main__':
     parser = OptionParser()
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/packing-unseen-google-objects-race-seq-cliport-n100-multi-results-test.json.p")
+    parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
+    # parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
+    # parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/packing-unseen-google-objects-race-seq-cliport-n100-multi-results-test.json.p")
     options, args = parser.parse_args()
     print(options)
 
@@ -467,8 +591,8 @@ if __name__ == '__main__':
     no_entity_commands = build_command_strings(entity_list=[''])
     person_entity_commands = build_command_strings(entity_list=['person'])
     block_entity_commands = build_command_strings(entity_list=['block'])
-    get_stats_for_run(options.runs_file, [[],no_entity_commands, person_entity_commands, block_entity_commands], ["all", 'no_entity', 'person', 'block'])
-    # get_stats_for_run(options.runs_file, [[]], ["all"])
+    # get_stats_for_run(options.runs_file, [[],no_entity_commands, person_entity_commands, block_entity_commands], ["all", 'no_entity', 'person', 'block'])
+    get_stats_for_run(options.runs_file, [[]], ["all"])
     # get_stats_for_run(options.runs_file, [block_entity_commands], ['block'])
     # get_stats_for_run(options.runs_file, [person_entity_commands], ['person'])
     # get_stats_for_run(options.runs_file, [no_entity_commands], ['no_entity'])
