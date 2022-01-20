@@ -437,7 +437,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                 try:
                     runs=pickle.load(open(file_to_load, 'rb'))
                 except:
-                    print(f"SKIPPED {file}")
+                    print(f"SKIPPED pickled log that failed to load with an exception: {file}")
                 for run in runs:
                     run[1]+=run_num
                 print(f'loaded: {len(runs)} {file}')
@@ -469,6 +469,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
     not_moved_dict={}
     # cmd str: any object moved during trial
     not_moved_any_dict={}
+    skipped_trials = 0
     # for each cmd_str
     for cmd in data_dict:
         if cmd not in rankings_dict:
@@ -480,10 +481,13 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
         # of each run
         for run_num in data_dict[cmd]:
             # order each step in run
-            ordered_runs=list(data_dict[cmd][run_num].values())#[data_dict[cmd][run_num][i] for i in range(len(data_dict[cmd][run_num]))]
+            ordered_runs=list(data_dict[cmd][run_num].values())  # [data_dict[cmd][run_num][i] for i in range(len(data_dict[cmd][run_num]))]
+            # sort ordered_runs. 3 is the index of the run number, ie the contents of ordered_runs[3] is the run number
             ordered_runs.sort(key = lambda ordered_runs: ordered_runs[3])
-            if len(ordered_runs)==0:
-                print("skipping")
+            if len(ordered_runs) == 0:
+                skipped_trials += 1
+                print(f"skipping a single trial with run_num: {run_num}, command: {cmd},"
+                      f" num trials skipped so far across all commands: {skipped_trials}.")
                 continue
             ids=[]
             raw_order=[]
@@ -549,12 +553,13 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
     df_not_moved_any_dict.to_csv(os.path.join(save_path, "moved_any_object_by_command.csv"))
     # Tuple of dicts with numerical values for each identity
     dicts=(rankings_dict, placed_dict, moved_dict, not_moved_dict)
-    
+
     for cmd in placed_dict:
         for e in placed_dict[cmd]:
             for g in placed_dict[cmd][e]:
-                print("num samples: , "len(placed_dict[cmd][e][g]), cmd, e, g)
-    
+                print('TODO: some summary stats will go here')
+                # print("num samples: , " + str(len(placed_dict[cmd][e][g]), cmd, e, g)) % todo fixme
+
     # Names of each metric
     metric_names=("order object placed", "object placed", "object moved", "object not moved")
     # Compute means and 90% CIs for each identity-metric dict
