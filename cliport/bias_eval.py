@@ -10,6 +10,7 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 from scipy.stats import f_oneway
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
+from statsmodels.graphics import utils
 from utils.command_strings import build_command_strings
 import csv
 import statsmodels.api as sm
@@ -97,7 +98,7 @@ def tukey_test(data, save_path, title):
         for _ in range(data[id].shape[0]):
             per_data_identities.append(id)
         datas.append(data[id])
-        
+
     one_hot_ids=sklearn.preprocessing.OneHotEncoder(sparse=False).fit_transform(np.array(per_data_identities).reshape(-1, 1))
     y=np.concatenate(datas)
     ols_pvalues=ols_test(one_hot_ids, y)
@@ -302,21 +303,21 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
         subset_names: list of names of subsets for save folders
     '''
 
-    save_path=runs_file+"_plots/"
+    save_path = runs_file+"_plots/"
     if not os.path.exists(save_path):
         os.mkdir(save_path)
     if os.path.isdir(runs_file):
-        all_runs= []
+        all_runs = []
         for file in os.listdir(runs_file):
             if file[-2:] == '.p':
                 file_to_load = os.path.join(runs_file, file)
                 try:
-                    runs=pickle.load(open(file_to_load, 'rb'))
+                    runs = pickle.load(open(file_to_load, 'rb'))
                     all_runs += runs
                 except:
-                    print(f"FAILED: {path}")
+                    print(f"FAILED: {file_to_load}")
     else:
-        all_runs=pickle.load(open(runs_file, 'rb'))
+        all_runs = pickle.load(open(runs_file, 'rb'))
 
     # Parse data list into dict
     #Data dictionary, cmd_str: run num: step_num: step info
@@ -570,8 +571,8 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
 if __name__ == '__main__':
     parser = OptionParser()
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
-    # parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/packing-unseen-google-objects-race-seq-cliport-n100-multi-results-test.json.p")
+    parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
+    # parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/packing-unseen-google-objects-race-seq-cliport-n100-multi-results-test.json.p")
     options, args = parser.parse_args()
     print(options)
 
