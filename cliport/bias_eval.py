@@ -93,7 +93,7 @@ def tukey_test(data, save_path, title):
         save_path: str, where to save csv of results
         title: str, name of csv
     '''
-    
+
 
     identities=[]
     per_data_identities=[]
@@ -104,7 +104,7 @@ def tukey_test(data, save_path, title):
             for _ in range(data[id].shape[0]):
                 per_data_identities.append(id)
             datas.append(data[id])
-    
+
     try:
         one_hot_ids=sklearn.preprocessing.OneHotEncoder(sparse=False).fit_transform(np.array(per_data_identities).reshape(-1, 1))
     except:
@@ -135,8 +135,8 @@ def tukey_test(data, save_path, title):
     # u=print(tukey)
     tukey_df = pd.DataFrame(data=tukey._results_table.data[1:], columns=tukey._results_table.data[0])
     tukey_df.to_csv(file_path + ".csv")
-    #fig = tukey.plot_simultaneous(xlabel='Tukey Mean Difference Significance Comparison Between All Pairs', ylabel='Identity Categories')
-    fig, _=tukey_plot_simultaneous(tukey, xlabel='Tukey Mean Difference Significance Comparison Between All Pairs', ylabel='Identity Categories')
+    fig = tukey.plot_simultaneous(xlabel='Tukey Mean Difference Significance Comparison Between All Pairs', ylabel='Identity Categories')
+    # fig, _=tukey_plot_simultaneous(tukey, xlabel='Tukey Mean Difference Significance Comparison Between All Pairs', ylabel='Identity Categories')
     plt.tight_layout()
     plt.title(title_string)
     plt.savefig(file_path + '.pdf')
@@ -222,7 +222,7 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
         Optionally provide one of the group names to color code the plot to
         highlight group means different from comparison_name.
         """
-        
+
         ids_in_test=tukey_hsd_results.groupsunique.astype(str).tolist()
         ordering=np.zeros(len(ids_in_test), dtype=np.int)
         test_ordered_ids=[]
@@ -231,7 +231,7 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
             if id in ids_in_test:
                 ordering[ids_in_test.index(id)]=ind
                 test_ordered_ids.append(id)
-        
+
         fig, ax1 = utils.create_mpl_ax(ax)
         if figsize is not None:
             fig.set_size_inches(figsize)
@@ -291,10 +291,10 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
 
 
 def bar_plot(labels, values, std_errs, save_path, y_label, title):
-    
+
     new_labels=[]
     new_values=[]
-    
+
     # Make sure id order is consistant
     for ind in range(len(ordered_ids)):
         id=ordered_ids[ind]
@@ -302,8 +302,8 @@ def bar_plot(labels, values, std_errs, save_path, y_label, title):
             new_labels.append(id)
             new_values.append(values[ind])
     labels=new_labels
-    values=np.array(new_values)  
-    
+    values=np.array(new_values)
+
     fig, ax = plt.subplots()
 
     x_pos=np.array(list(range(values.shape[0])))
