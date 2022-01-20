@@ -16,6 +16,10 @@ import statsmodels.api as sm
 import sklearn.preprocessing
 from sklearn.linear_model import LinearRegression
 from scipy import stats
+from statsmodels.graphics import utils
+from statsmodels.compat.python import lzip, lrange
+
+ordered_ids=['AF', 'AM', 'BF', 'BM', 'LF', 'LM', 'WF', 'WM', 'A', 'B', 'L', 'W', 'F', 'M']
 
 def ols_test(X, y):
     X_constant = sm.add_constant(X)
@@ -88,17 +92,23 @@ def tukey_test(data, save_path, title):
         save_path: str, where to save csv of results
         title: str, name of csv
     '''
+    
 
     identities=[]
     per_data_identities=[]
     datas=[]
-    for id in data:
-        identities.append(id)
-        for _ in range(data[id].shape[0]):
-            per_data_identities.append(id)
-        datas.append(data[id])
-        
-    one_hot_ids=sklearn.preprocessing.OneHotEncoder(sparse=False).fit_transform(np.array(per_data_identities).reshape(-1, 1))
+    for id in ordered_ids:
+        if id in data:
+            identities.append(id)
+            for _ in range(data[id].shape[0]):
+                per_data_identities.append(id)
+            datas.append(data[id])
+    
+    try:
+        one_hot_ids=sklearn.preprocessing.OneHotEncoder(sparse=False).fit_transform(np.array(per_data_identities).reshape(-1, 1))
+    except:
+        print("No data to tukay test")
+        return
     y=np.concatenate(datas)
     ols_pvalues=ols_test(one_hot_ids, y)
     LM, bp_pval, test_result=breusch_pagan_test(one_hot_ids, y)
@@ -124,7 +134,8 @@ def tukey_test(data, save_path, title):
     # u=print(tukey)
     tukey_df = pd.DataFrame(data=tukey._results_table.data[1:], columns=tukey._results_table.data[0])
     tukey_df.to_csv(file_path + ".csv")
-    fig = tukey.plot_simultaneous(xlabel='Tukey Mean Difference Significance Comparison Between All Pairs', ylabel='Identity Categories')
+    #fig = tukey.plot_simultaneous(xlabel='Tukey Mean Difference Significance Comparison Between All Pairs', ylabel='Identity Categories')
+    fig, _=tukey_plot_simultaneous(tukey, xlabel='Tukey Mean Difference Significance Comparison Between All Pairs', ylabel='Identity Categories')
     plt.tight_layout()
     plt.title(title_string)
     plt.savefig(file_path + '.pdf')
@@ -210,6 +221,16 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
         Optionally provide one of the group names to color code the plot to
         highlight group means different from comparison_name.
         """
+        
+        ids_in_test=tukey_hsd_results.groupsunique.astype(str).tolist()
+        ordering=np.zeros(len(ids_in_test), dtype=np.int)
+        test_ordered_ids=[]
+        for ind in range(len(ordered_ids)):
+            id=ordered_ids[ind]
+            if id in ids_in_test:
+                ordering[ids_in_test.index(id)]=ind
+                test_ordered_ids.append(id)
+        
         fig, ax1 = utils.create_mpl_ax(ax)
         if figsize is not None:
             fig.set_size_inches(figsize)
@@ -224,7 +245,7 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
         maxrange = [means[i] + tukey_hsd_results.halfwidths[i] for i in range(len(means))]
 
         if comparison_name is None:
-            ax1.errorbar(means, lrange(len(means)), xerr=tukey_hsd_results.halfwidths,
+            ax1.errorbar(means[ordering], lrange(len(means)), xerr=tukey_hsd_results.halfwidths[ordering],
                          marker='o', linestyle='None', color='k', ecolor='k')
         else:
             if comparison_name not in tukey_hsd_results.groupsunique:
@@ -260,7 +281,7 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
         r = np.max(maxrange) - np.min(minrange)
         ax1.set_ylim([-1, tukey_hsd_results._multicomp.ngroups])
         ax1.set_xlim([np.min(minrange) - r / 10., np.max(maxrange) + r / 10.])
-        ylbls = [""] + tukey_hsd_results.groupsunique.astype(str).tolist() + [""]
+        ylbls = [""] + test_ordered_ids + [""]
         ax1.set_yticks(np.arange(-1, len(means) + 1))
         ax1.set_yticklabels(ylbls)
         ax1.set_xlabel(xlabel if xlabel is not None else '')
@@ -269,6 +290,19 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
 
 
 def bar_plot(labels, values, std_errs, save_path, y_label, title):
+    
+    new_labels=[]
+    new_values=[]
+    
+    # Make sure id order is consistant
+    for ind in range(len(ordered_ids)):
+        id=ordered_ids[ind]
+        if id in labels:
+            new_labels.append(id)
+            new_values.append(values[ind])
+    labels=new_labels
+    values=np.array(new_values)  
+    
     fig, ax = plt.subplots()
 
     x_pos=np.array(list(range(values.shape[0])))
