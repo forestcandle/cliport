@@ -141,6 +141,9 @@ def tukey_test(data, save_path, title):
     plt.title(title_string)
     plt.savefig(file_path + '.pdf')
 
+    if anova_oneway.pvalue==0:
+        u=0
+        
     results=[["anova statistic", anova_oneway.statistic, anova_oneway.pvalue, len(identities)-1, y.shape[0]-len(identities)]]
     for row in tukey._results_table:
         results.append([])
@@ -226,11 +229,13 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
         ids_in_test=tukey_hsd_results.groupsunique.astype(str).tolist()
         ordering=np.zeros(len(ids_in_test), dtype=np.int)
         test_ordered_ids=[]
+        added=0
         for ind in range(len(ordered_ids)):
             id=ordered_ids[ind]
             if id in ids_in_test:
-                ordering[ids_in_test.index(id)]=ind
+                ordering[ids_in_test.index(id)]=added
                 test_ordered_ids.append(id)
+                added+=1
         
         fig, ax1 = utils.create_mpl_ax(ax)
         if figsize is not None:
@@ -337,21 +342,25 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
         subset_names: list of names of subsets for save folders
     '''
 
-    save_path = runs_file+"_plots/"
+    save_path=runs_file+"_plots/"
     if not os.path.exists(save_path):
         os.mkdir(save_path)
     if os.path.isdir(runs_file):
-        all_runs = []
+        all_runs= []
+        run_num=0
         for file in os.listdir(runs_file):
             if file[-2:] == '.p':
                 file_to_load = os.path.join(runs_file, file)
+                
                 try:
-                    runs = pickle.load(open(file_to_load, 'rb'))
-                    all_runs += runs
+                    runs=pickle.load(open(file_to_load, 'rb'))
                 except:
-                    print(f"FAILED: {file_to_load}")
-    else:
-        all_runs = pickle.load(open(runs_file, 'rb'))
+                    print(f"SKIPPED {file}")
+                for run in runs:
+                    run[1]+=run_num
+                print(f'loaded: {len(runs)} {file}')
+                all_runs += runs
+                run_num+=5000
 
     # Parse data list into dict
     #Data dictionary, cmd_str: run num: step_num: step info
@@ -605,8 +614,8 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
 if __name__ == '__main__':
     parser = OptionParser()
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
-    parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
-    # parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/packing-unseen-google-objects-race-seq-cliport-n100-multi-results-test.json.p")
+    #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
+    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/checkpoints_test_cfd-180-strings-2022-01-11-1218 2/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
     options, args = parser.parse_args()
     print(options)
 
