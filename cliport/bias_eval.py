@@ -136,7 +136,7 @@ def tukey_test(data, save_path, title):
     tukey_df = pd.DataFrame(data=tukey._results_table.data[1:], columns=tukey._results_table.data[0])
     tukey_df.to_csv(file_path + ".csv")
     #fig = tukey.plot_simultaneous(xlabel='Tukey Mean Difference Significance Comparison Between All Pairs', ylabel='Identity Categories')
-    fig, _=tukey_plot_simultaneous(tukey, xlabel='Tukey Mean Difference Significance Comparison Between All Pairs', ylabel='Identity Categories')
+    fig=tukey_plot_simultaneous(tukey, xlabel='Mean', ylabel='Identity')
     plt.tight_layout()
     plt.title(title_string)
     print('saving plot', file_path)
@@ -227,23 +227,31 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
         highlight group means different from comparison_name.
         """
 
+        if getattr(tukey_hsd_results, 'halfwidths', None) is None:
+            tukey_hsd_results._simultaneous_ci()
+        means = tukey_hsd_results._multicomp.groupstats.groupmean
+
         ids_in_test=tukey_hsd_results.groupsunique.astype(str).tolist()
         ordering=np.zeros(len(ids_in_test), dtype=np.int)
         test_ordered_ids=[]
+        new_means=[]
+        new_errs=[]
         added=0
         for ind in range(len(ordered_ids)):
             id=ordered_ids[ind]
             if id in ids_in_test:
-                ordering[ids_in_test.index(id)]=added
+                add_ind=ids_in_test.index(id)
+                new_means.append(means[add_ind])
+                new_errs.append(tukey_hsd_results.halfwidths[add_ind])
                 test_ordered_ids.append(id)
                 added+=1
 
         fig, ax1 = utils.create_mpl_ax(ax)
         if figsize is not None:
             fig.set_size_inches(figsize)
-        if getattr(tukey_hsd_results, 'halfwidths', None) is None:
-            tukey_hsd_results._simultaneous_ci()
-        means = tukey_hsd_results._multicomp.groupstats.groupmean
+        
+        means=np.array(new_means)
+        errs=np.array(new_errs)
 
 
         sigidx = []
@@ -252,14 +260,14 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
         maxrange = [means[i] + tukey_hsd_results.halfwidths[i] for i in range(len(means))]
 
         if comparison_name is None:
-            ax1.errorbar(means[ordering], lrange(len(means)), xerr=tukey_hsd_results.halfwidths[ordering],
+            ax1.errorbar(means, lrange(len(means)), xerr=errs,
                          marker='o', linestyle='None', color='k', ecolor='k')
         else:
-            if comparison_name not in tukey_hsd_results.groupsunique:
+            if comparison_name not in self.groupsunique:
                 raise ValueError('comparison_name not found in group names.')
-            midx = np.where(tukey_hsd_results.groupsunique==comparison_name)[0][0]
+            midx = np.where(self.groupsunique==comparison_name)[0][0]
             for i in range(len(means)):
-                if tukey_hsd_results.groupsunique[i] == comparison_name:
+                if self.groupsunique[i] == comparison_name:
                     continue
                 if (min(maxrange[i], maxrange[midx]) -
                                          max(minrange[i], minrange[midx]) < 0):
@@ -267,21 +275,21 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
                 else:
                     nsigidx.append(i)
             #Plot the main comparison
-            ax1.errorbar(means[midx], midx, xerr=tukey_hsd_results.halfwidths[midx],
+            ax1.errorbar(means[midx], midx, xerr=self.halfwidths[midx],
                          marker='o', linestyle='None', color='b', ecolor='b')
-            ax1.plot([minrange[midx]]*2, [-1, tukey_hsd_results._multicomp.ngroups],
+            ax1.plot([minrange[midx]]*2, [-1, self._multicomp.ngroups],
                      linestyle='--', color='0.7')
-            ax1.plot([maxrange[midx]]*2, [-1, tukey_hsd_results._multicomp.ngroups],
+            ax1.plot([maxrange[midx]]*2, [-1, self._multicomp.ngroups],
                      linestyle='--', color='0.7')
             #Plot those that are significantly different
             if len(sigidx) > 0:
                 ax1.errorbar(means[sigidx], sigidx,
-                             xerr=tukey_hsd_results.halfwidths[sigidx], marker='o',
+                             xerr=self.halfwidths[sigidx], marker='o',
                              linestyle='None', color='r', ecolor='r')
             #Plot those that are not significantly different
             if len(nsigidx) > 0:
                 ax1.errorbar(means[nsigidx], nsigidx,
-                             xerr=tukey_hsd_results.halfwidths[nsigidx], marker='o',
+                             xerr=self.halfwidths[nsigidx], marker='o',
                              linestyle='None', color='0.5', ecolor='0.5')
 
         ax1.set_title('Multiple Comparisons Between All Pairs (Tukey)')
@@ -293,24 +301,95 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
         ax1.set_yticklabels(ylbls)
         ax1.set_xlabel(xlabel if xlabel is not None else '')
         ax1.set_ylabel(ylabel if ylabel is not None else '')
-        return fig, tukey_hsd_results
+        return fig
+
+#         ids_in_test=tukey_hsd_results.groupsunique.astype(str).tolist()
+#         ordering=np.zeros(len(ids_in_test), dtype=np.int)
+#         test_ordered_ids=[]
+#         added=0
+#         for ind in range(len(ordered_ids)):
+#             id=ordered_ids[ind]
+#             if id in ids_in_test:
+#                 ordering[ids_in_test.index(id)]=added
+#                 test_ordered_ids.append(id)
+#                 added+=1
+# 
+#         fig, ax1 = utils.create_mpl_ax(ax)
+#         if figsize is not None:
+#             fig.set_size_inches(figsize)
+#         if getattr(tukey_hsd_results, 'halfwidths', None) is None:
+#             tukey_hsd_results._simultaneous_ci()
+#         means = tukey_hsd_results._multicomp.groupstats.groupmean
+# 
+# 
+#         sigidx = []
+#         nsigidx = []
+#         minrange = [means[i] - tukey_hsd_results.halfwidths[i] for i in range(len(means))]
+#         maxrange = [means[i] + tukey_hsd_results.halfwidths[i] for i in range(len(means))]
+# 
+#         if comparison_name is None:
+#             ax1.errorbar(means[ordering], lrange(len(means)), xerr=tukey_hsd_results.halfwidths[ordering],
+#                          marker='o', linestyle='None', color='k', ecolor='k')
+#         else:
+#             if comparison_name not in tukey_hsd_results.groupsunique:
+#                 raise ValueError('comparison_name not found in group names.')
+#             midx = np.where(tukey_hsd_results.groupsunique==comparison_name)[0][0]
+#             for i in range(len(means)):
+#                 if tukey_hsd_results.groupsunique[i] == comparison_name:
+#                     continue
+#                 if (min(maxrange[i], maxrange[midx]) -
+#                                          max(minrange[i], minrange[midx]) < 0):
+#                     sigidx.append(i)
+#                 else:
+#                     nsigidx.append(i)
+#             #Plot the main comparison
+#             ax1.errorbar(means[midx], midx, xerr=tukey_hsd_results.halfwidths[midx],
+#                          marker='o', linestyle='None', color='b', ecolor='b')
+#             ax1.plot([minrange[midx]]*2, [-1, tukey_hsd_results._multicomp.ngroups],
+#                      linestyle='--', color='0.7')
+#             ax1.plot([maxrange[midx]]*2, [-1, tukey_hsd_results._multicomp.ngroups],
+#                      linestyle='--', color='0.7')
+#             #Plot those that are significantly different
+#             if len(sigidx) > 0:
+#                 ax1.errorbar(means[sigidx], sigidx,
+#                              xerr=tukey_hsd_results.halfwidths[sigidx], marker='o',
+#                              linestyle='None', color='r', ecolor='r')
+#             #Plot those that are not significantly different
+#             if len(nsigidx) > 0:
+#                 ax1.errorbar(means[nsigidx], nsigidx,
+#                              xerr=tukey_hsd_results.halfwidths[nsigidx], marker='o',
+#                              linestyle='None', color='0.5', ecolor='0.5')
+# 
+#         ax1.set_title('Multiple Comparisons Between All Pairs (Tukey)')
+#         r = np.max(maxrange) - np.min(minrange)
+#         ax1.set_ylim([-1, tukey_hsd_results._multicomp.ngroups])
+#         ax1.set_xlim([np.min(minrange) - r / 10., np.max(maxrange) + r / 10.])
+#         ylbls = [""] + test_ordered_ids + [""]
+#         ax1.set_yticks(np.arange(-1, len(means) + 1))
+#         ax1.set_yticklabels(ylbls)
+#         ax1.set_xlabel(xlabel if xlabel is not None else '')
+#         ax1.set_ylabel(ylabel if ylabel is not None else '')
+#         return fig, tukey_hsd_results
 
 
 def bar_plot(labels, values, std_errs, save_path, y_label, title):
 
     new_labels=[]
     new_values=[]
+    new_std_errs=[]
 
     # Make sure id order is consistant
     add_ind=0
     for ind in range(len(ordered_ids)):
         id=ordered_ids[ind]
         if id in labels:
+            add_ind=labels.index(id)
             new_labels.append(id)
             new_values.append(values[add_ind])
-            add_ind+=1
+            new_std_errs.append(std_errs[add_ind])
     labels=new_labels
     values=np.array(new_values)
+    std_errs=np.array(new_std_errs)
 
     fig, ax = plt.subplots()
 
@@ -618,7 +697,7 @@ if __name__ == '__main__':
     parser = OptionParser()
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/checkpoints/")
+    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/criminal/")
 
     options, args = parser.parse_args()
     print(options)
