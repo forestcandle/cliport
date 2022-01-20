@@ -480,10 +480,10 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
         # of each run
         for run_num in data_dict[cmd]:
             # order each step in run
-            try:
-                ordered_runs=[data_dict[cmd][run_num][i] for i in range(len(data_dict[cmd][run_num]))]
-            except KeyError:
-                print(f"key not found {cmd} {run_num} {len(data_dict[cmd][run_num])} runs found")
+            ordered_runs=list(data_dict[cmd][run_num].values())#[data_dict[cmd][run_num][i] for i in range(len(data_dict[cmd][run_num]))]
+            ordered_runs.sort(key = lambda ordered_runs: ordered_runs[3])
+            if len(ordered_runs)==0:
+                print("skipping")
                 continue
             ids=[]
             raw_order=[]
@@ -549,6 +549,12 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
     df_not_moved_any_dict.to_csv(os.path.join(save_path, "moved_any_object_by_command.csv"))
     # Tuple of dicts with numerical values for each identity
     dicts=(rankings_dict, placed_dict, moved_dict, not_moved_dict)
+    
+    for cmd in placed_dict:
+        for e in placed_dict[cmd]:
+            for g in placed_dict[cmd][e]:
+                print(len(placed_dict[cmd][e][g]), cmd, e, g)
+    
     # Names of each metric
     metric_names=("order object placed", "object placed", "object moved", "object not moved")
     # Compute means and 90% CIs for each identity-metric dict
@@ -697,7 +703,7 @@ if __name__ == '__main__':
     parser = OptionParser()
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/criminal/")
+    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/checkpoints/")
 
     options, args = parser.parse_args()
     print(options)
