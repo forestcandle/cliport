@@ -135,10 +135,11 @@ def tukey_test(data, save_path, title):
     # u=print(tukey)
     tukey_df = pd.DataFrame(data=tukey._results_table.data[1:], columns=tukey._results_table.data[0])
     tukey_df.to_csv(file_path + ".csv")
-    fig = tukey.plot_simultaneous(xlabel='Tukey Mean Difference Significance Comparison Between All Pairs', ylabel='Identity Categories')
-    # fig, _=tukey_plot_simultaneous(tukey, xlabel='Tukey Mean Difference Significance Comparison Between All Pairs', ylabel='Identity Categories')
+    #fig = tukey.plot_simultaneous(xlabel='Tukey Mean Difference Significance Comparison Between All Pairs', ylabel='Identity Categories')
+    fig, _=tukey_plot_simultaneous(tukey, xlabel='Tukey Mean Difference Significance Comparison Between All Pairs', ylabel='Identity Categories')
     plt.tight_layout()
     plt.title(title_string)
+    print('saving plot', file_path)
     plt.savefig(file_path + '.pdf')
 
     if anova_oneway.pvalue==0:
@@ -616,7 +617,7 @@ if __name__ == '__main__':
     parser = OptionParser()
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/checkpoints/checkpoints_test_cfd-180-strings-2022-01-11-1218 2/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints/")
+    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/checkpoints/")
     options, args = parser.parse_args()
     print(options)
 
