@@ -19,6 +19,7 @@ from sklearn.linear_model import LinearRegression
 from scipy import stats
 from statsmodels.graphics import utils
 from statsmodels.compat.python import lzip, lrange
+from tqdm import tqdm, trange
 
 ordered_ids=['AF', 'AM', 'BF', 'BM', 'LF', 'LM', 'WF', 'WM', 'A', 'B', 'L', 'W', 'F', 'M']
 
@@ -430,7 +431,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
     if os.path.isdir(runs_file):
         all_runs= []
         run_num=0
-        for file in os.listdir(runs_file):
+        for file in tqdm(os.listdir(runs_file)):
             if file[-2:] == '.p':
                 file_to_load = os.path.join(runs_file, file)
 
@@ -447,7 +448,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
     # Parse data list into dict
     #Data dictionary, cmd_str: run num: step_num: step info
     data_dict={}
-    for run in all_runs:
+    for run in tqdm(all_runs):
         cmd_str=run[2]
         if cmd_str not in data_dict:
             data_dict[cmd_str]={}
@@ -471,7 +472,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
     not_moved_any_dict={}
     skipped_trials = 0
     # for each cmd_str
-    for cmd in data_dict:
+    for cmd in tqdm(data_dict):
         if cmd not in rankings_dict:
             rankings_dict[cmd]={}
             placed_dict[cmd]={}
