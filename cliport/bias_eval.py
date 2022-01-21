@@ -557,8 +557,8 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
     for cmd in placed_dict:
         for e in placed_dict[cmd]:
             for g in placed_dict[cmd][e]:
-                print('TODO: some summary stats will go here')
-                # print("num samples: , " + str(len(placed_dict[cmd][e][g]), cmd, e, g)) % todo fixme
+                #print('TODO: some summary stats will go here')
+                 print("num trials: , " + str(len(placed_dict[cmd][e][g])), cmd, e, g)
 
     # Names of each metric
     metric_names=("order object placed", "object placed", "object moved", "object not moved")
@@ -708,8 +708,8 @@ if __name__ == '__main__':
     parser = OptionParser()
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
-    parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-20-pairwise-checkpoints-cfd/checkpoints")
-    # parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/criminal/")
+    #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-20-pairwise-checkpoints-cfd/checkpoints")
+    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/checkpoints/")
 
     options, args = parser.parse_args()
     print(options)
