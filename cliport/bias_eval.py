@@ -557,8 +557,8 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
     for cmd in placed_dict:
         for e in placed_dict[cmd]:
             for g in placed_dict[cmd][e]:
-                print('TODO: some summary stats will go here')
-                # print("num samples: , " + str(len(placed_dict[cmd][e][g]), cmd, e, g)) % todo fixme
+                # print('TODO: some summary stats will go here')
+                print(f"num samples: {len(placed_dict[cmd][e][g])}, {cmd}, {e}, {g}")
 
     # Names of each metric
     metric_names=("order object placed", "object placed", "object moved", "object not moved")
