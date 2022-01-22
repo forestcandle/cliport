@@ -40,51 +40,51 @@ def ols_test(X, y):
 #     Breusch-Pagan test for heteroskedasticity in a linear regression model:
 #     H_0 = No heteroskedasticity.
 #     H_1 = Heteroskedasticity is present.
-# 
+#
 #     Inputs:
 #     x = a numpy.ndarray containing the predictor variables. Shape = (nSamples, nPredictors).
 #     y = a 1D numpy.ndarray containing the response variable. Shape = (nSamples, ).
-# 
+#
 #     Outputs a list containing three elements:
 #     1. the Breusch-Pagan test statistic.
 #     2. the p-value for the test.
 #     3. the test result.
 #     '''
-# 
+#
 #     if y.ndim != 1:
 #         raise SystemExit('Error: y has more than 1 dimension.')
 #     if x.shape[0] != y.shape[0]:
 #         raise SystemExit('Error: the number of samples differs between x and y.')
 #     else:
 #         n_samples = y.shape[0]
-# 
+#
 #     # fit an OLS linear model to y using x:
 #     lm = LinearRegression()
 #     lm.fit(x, y)
-# 
+#
 #     # calculate the squared errors:
 #     err = (y - lm.predict(x))**2
-# 
+#
 #     # fit an auxiliary regression to the squared errors:
 #     # why?: to estimate the variance in err explained by x
 #     lm.fit(x, err)
 #     pred_err = lm.predict(x)
 #     del lm
-# 
+#
 #     # calculate the coefficient of determination:
 #     ss_tot = sum((err - np.mean(err))**2)
 #     ss_res = sum((err - pred_err)**2)
 #     r2 = 1 - (ss_res / ss_tot)
 #     del err, pred_err, ss_res, ss_tot
-# 
+#
 #     # calculate the Lagrange multiplier:
 #     LM = n_samples * r2
 #     del r2
-# 
+#
 #     # calculate p-value. degrees of freedom = number of predictors.
 #     # this is equivalent to (p - 1) parameter restrictions in Wikipedia entry.
 #     pval = stats.distributions.chi2.sf(LM, x.shape[1])
-# 
+#
 #     if pval < 0.01:
 #         test_result = 'Heteroskedasticity present at 99% CI.'
 #     elif pval < 0.05:
@@ -144,7 +144,10 @@ def tukey_test(data, save_path, title):
     tukey_df = pd.DataFrame(data=tukey._results_table.data[1:], columns=tukey._results_table.data[0])
     tukey_df.to_csv(file_path + ".csv")
     #fig = tukey.plot_simultaneous(xlabel='Tukey Mean Difference Significance Comparison Between All Pairs', ylabel='Identity Categories')
-    fig=tukey_plot_simultaneous(tukey, xlabel='Mean', ylabel='Identity')
+    error_bars = False  # This is a HACK to switch from tukey error bars to a categorical point mean plot.
+    if not error_bars:
+        title_string = title_string.replace('tukey ', '')
+    fig=tukey_plot_simultaneous(tukey, xlabel='Mean', ylabel='Identity', title_string=title_string)
     plt.tight_layout()
     plt.title(title_string)
     print('saving plot', file_path)
@@ -153,24 +156,27 @@ def tukey_test(data, save_path, title):
     if anova_oneway.pvalue==0:
         u=0
 
-#     results=[["anova statistic", anova_oneway.statistic, anova_oneway.pvalue, len(identities)-1, y.shape[0]-len(identities)]]
-#     for row in tukey._results_table:
-#         results.append([])
-#         for data in row.data:
-#             results[-1].append(str(data))
-# 
-#     results.append(["Tukey Simultanious CI"])
-#     results.append(np.ndarray.tolist(tukey.groupsunique))
-#     results.append(np.ndarray.tolist(tukey.halfwidths))
-#     results.append(["OLS min p value", np.amax(ols_pvalues), "bptest p value", bp_pvalue, fbpvalue])
-#     with open(os.path.join(save_path, title+".csv"), "w") as csvfile:
-#         csv_writer=csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-#         csv_writer.writerows(results)
-#     u=0
+    results=[["anova statistic", anova_oneway.statistic, anova_oneway.pvalue, len(identities)-1, y.shape[0]-len(identities)]]
+    for row in tukey._results_table:
+        results.append([])
+        for data in row.data:
+            results[-1].append(str(data))
+
+    results.append(["Tukey Simultanious CI"])
+    results.append(np.ndarray.tolist(tukey.groupsunique))
+    results.append(np.ndarray.tolist(tukey.halfwidths))
+    results.append(["OLS min p value", np.amax(ols_pvalues)])
+    results.append(bp_test_result_list_names)
+    results.append(bp_test_result_list)
+    with open(os.path.join(save_path, title+".csv"), "w") as csvfile:
+        csv_writer=csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        csv_writer.writerows(results)
+    u=0
+
 
 
 def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, figsize=(10,6),
-                          xlabel=None, ylabel=None):
+                          xlabel=None, ylabel=None, title_string='Multiple Comparisons Between All Pairs (Tukey)', error_bars=False):
         """Plot a universal confidence interval of each group mean
 
         Visualize significant differences in a plot with one confidence
@@ -283,24 +289,26 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
                 else:
                     nsigidx.append(i)
             #Plot the main comparison
-            ax1.errorbar(means[midx], midx, xerr=self.halfwidths[midx],
+            ax1.errorbar(means[midx], midx, xerr=self.halfwidths[midx] if error_bars else 0,
                          marker='o', linestyle='None', color='b', ecolor='b')
-            ax1.plot([minrange[midx]]*2, [-1, self._multicomp.ngroups],
-                     linestyle='--', color='0.7')
-            ax1.plot([maxrange[midx]]*2, [-1, self._multicomp.ngroups],
-                     linestyle='--', color='0.7')
+            ax1.annotate(midx, means[midx])
+            if not error_bars:
+                ax1.plot([minrange[midx]]*2, [-1, self._multicomp.ngroups],
+                        linestyle='--', color='0.7')
+                ax1.plot([maxrange[midx]]*2, [-1, self._multicomp.ngroups],
+                        linestyle='--', color='0.7')
             #Plot those that are significantly different
             if len(sigidx) > 0:
                 ax1.errorbar(means[sigidx], sigidx,
-                             xerr=self.halfwidths[sigidx], marker='o',
+                             xerr=self.halfwidths[sigidx] if error_bars else 0, marker='o',
                              linestyle='None', color='r', ecolor='r')
             #Plot those that are not significantly different
             if len(nsigidx) > 0:
                 ax1.errorbar(means[nsigidx], nsigidx,
-                             xerr=self.halfwidths[nsigidx], marker='o',
+                             xerr=self.halfwidths[nsigidx] if error_bars else 0, marker='o',
                              linestyle='None', color='0.5', ecolor='0.5')
 
-        ax1.set_title('Multiple Comparisons Between All Pairs (Tukey)')
+        ax1.set_title(title_string)
         r = np.max(maxrange) - np.min(minrange)
         ax1.set_ylim([-1, tukey_hsd_results._multicomp.ngroups])
         ax1.set_xlim([np.min(minrange) - r / 10., np.max(maxrange) + r / 10.])
@@ -775,10 +783,11 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
 
 if __name__ == '__main__':
     parser = OptionParser()
-    #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
+    # parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-20-pairwise-checkpoints-cfd/checkpoints")
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/checkpoints/")
+    parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-67-strings-2022-01-21-pairwise/checkpoints")
+    # parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/checkpoints/")
 
     options, args = parser.parse_args()
     print(options)
