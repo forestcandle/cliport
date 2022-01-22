@@ -468,7 +468,7 @@ def bar_plot(data, save_path, y_label, title):
     std_errs=np.array(new_std_errs)
 
     fig, ax = plt.subplots()
-    fig.set_size_inches((12,4))
+    fig.set_size_inches((8,4))
 
     x_pos=np.array(list(range(values.shape[0])))
 
