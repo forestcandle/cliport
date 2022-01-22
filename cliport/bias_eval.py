@@ -404,7 +404,7 @@ def bar_plot(data, save_path, y_label, title):
     
     # https://en.wikipedia.org/wiki/Bonferroni_correction
     single_bonferroni_corrected_p=1-mp/len(datas)
-    pairwise_bonferroni_corrected_p=1-mp/(len(datas)*(len(datas)-1))
+    pairwise_bonferroni_corrected_p=1-mp/((len(datas)*(len(datas)-1))/2.0)
     
     single_std_errs=[]
     pairwise_std_errs=np.zeros((len(datas), len(datas)))
@@ -432,9 +432,10 @@ def bar_plot(data, save_path, y_label, title):
         print("No data to tukay test")
         return
     y=np.concatenate(datas)
+    print(title, "allmean", np.mean(y))
     ols_pvalues, bp_pvalue, fbpvalue=ols_test(one_hot_ids, y)
                 
-    results=["Pairwise p values. <0.05 indicates difference is significant"]
+    results=["(Pairwise p values, difference in means). p<0.05 indicates difference is significant"]
     results.append([""]+identities)
     for i in range(pairwise_std_errs.shape[0]):
         results.append([])
@@ -442,7 +443,7 @@ def bar_plot(data, save_path, y_label, title):
             if j==0:
                 results[i+1].append(identities[i])
             else:
-                results[i+1].append(pairwise_std_errs[i][j-1])
+                results[i+1].append((pairwise_std_errs[i][j-1], values[i]-values[j-1]))
     
     results.append(["OLS max p value, >=0.05 indicates normality (good)", np.amax(ols_pvalues)])
     with open(os.path.join(save_path, title+".csv"), "w") as csvfile:
@@ -467,6 +468,7 @@ def bar_plot(data, save_path, y_label, title):
     std_errs=np.array(new_std_errs)
 
     fig, ax = plt.subplots()
+    fig.set_size_inches((12,4))
 
     x_pos=np.array(list(range(values.shape[0])))
 
@@ -739,7 +741,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                     stds=np.array(stds)
 
                     # Plot results for specific command
-                    #bar_plot(cmd_data_dict, cmd_save_path, metric_names[d_ind], cmd)
+                    bar_plot(cmd_data_dict, cmd_save_path, metric_names[d_ind], cmd)
 
             # Plot results for all commands
             # ethnicity x gender for all cmds
@@ -770,10 +772,16 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                 all_stds.append([low_err, high_err])
 
             all_means=np.array(all_means)
-            all_stds=np.array(all_stds)
-            bar_plot(all_data_dict_ethnicity_gender, cmd_save_path, metric_names[d_ind], "Bar All Commands Ethnicity Gender")
-            bar_plot(all_data_dict_ethnicity, cmd_save_path, metric_names[d_ind], "Bar All Commands Ethnicity")
-            bar_plot(all_data_dict_gender, cmd_save_path, metric_names[d_ind], "Bar All Commands Gender")
+            all_stds=np.array(all_stds
+                              )
+            bar_plot(all_data_dict_ethnicity_gender, cmd_save_path, metric_names[d_ind], f"{metric_names[d_ind]} All Commands Ethnicity x Gender")
+            bar_plot(all_data_dict_ethnicity, cmd_save_path, metric_names[d_ind], f"{metric_names[d_ind]} All Commands Ethnicity")
+            bar_plot(all_data_dict_gender, cmd_save_path, metric_names[d_ind], f"{metric_names[d_ind]} All Commands Gender")
+            
+            all_dict=all_data_dict_ethnicity_gender
+            all_dict.update(all_data_dict_ethnicity)
+            all_dict.update(all_data_dict_gender)
+            bar_plot(all_dict, cmd_save_path, metric_names[d_ind], f"{metric_names[d_ind]} All Commands")
 
 #             tukey_test(all_data_dict_ethnicity_gender, cmd_save_path, f'tukey_test_all_cmds_{metric_names[d_ind]}_ethnicity_gender')
 #             tukey_test(all_data_dict_ethnicity, cmd_save_path, f'tukey_test_all_cmds_{metric_names[d_ind]}_ethnicity')
@@ -786,8 +794,8 @@ if __name__ == '__main__':
     # parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-20-pairwise-checkpoints-cfd/checkpoints")
-    parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-67-strings-2022-01-21-pairwise/checkpoints")
-    # parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/checkpoints/")
+    #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-67-strings-2022-01-21-pairwise/checkpoints")
+    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/checkpoints/")
 
     options, args = parser.parse_args()
     print(options)
