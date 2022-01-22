@@ -33,7 +33,7 @@ def ols_test(X, y):
         'f-value', 'f p-value']
     test = sms.het_breuschpagan(lin_reg.resid, lin_reg.model.exog)
     
-    return lin_reg.pvalues, test[1]
+    return lin_reg.pvalues, test[1], test[3]
 
 # def breusch_pagan_test(x, y):
 #     '''
@@ -119,7 +119,7 @@ def tukey_test(data, save_path, title):
         print("No data to tukay test")
         return
     y=np.concatenate(datas)
-    ols_pvalues, bp_pvalue=ols_test(one_hot_ids, y)
+    ols_pvalues, bp_pvalue, fbpvalue=ols_test(one_hot_ids, y)
     #LM, bp_pval, test_result=breusch_pagan_test(one_hot_ids, y)
 
     title_string = title.replace('_', ' ')
@@ -153,20 +153,20 @@ def tukey_test(data, save_path, title):
     if anova_oneway.pvalue==0:
         u=0
 
-    results=[["anova statistic", anova_oneway.statistic, anova_oneway.pvalue, len(identities)-1, y.shape[0]-len(identities)]]
-    for row in tukey._results_table:
-        results.append([])
-        for data in row.data:
-            results[-1].append(str(data))
-
-    results.append(["Tukey Simultanious CI"])
-    results.append(np.ndarray.tolist(tukey.groupsunique))
-    results.append(np.ndarray.tolist(tukey.halfwidths))
-    results.append(["OLS min p value", np.amax(ols_pvalues), "bptest p value", bp_pvalue])
-    with open(os.path.join(save_path, title+".csv"), "w") as csvfile:
-        csv_writer=csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        csv_writer.writerows(results)
-    u=0
+#     results=[["anova statistic", anova_oneway.statistic, anova_oneway.pvalue, len(identities)-1, y.shape[0]-len(identities)]]
+#     for row in tukey._results_table:
+#         results.append([])
+#         for data in row.data:
+#             results[-1].append(str(data))
+# 
+#     results.append(["Tukey Simultanious CI"])
+#     results.append(np.ndarray.tolist(tukey.groupsunique))
+#     results.append(np.ndarray.tolist(tukey.halfwidths))
+#     results.append(["OLS min p value", np.amax(ols_pvalues), "bptest p value", bp_pvalue, fbpvalue])
+#     with open(os.path.join(save_path, title+".csv"), "w") as csvfile:
+#         csv_writer=csv.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+#         csv_writer.writerows(results)
+#     u=0
 
 
 def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, figsize=(10,6),
@@ -380,7 +380,66 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
 #         return fig, tukey_hsd_results
 
 
-def bar_plot(labels, values, std_errs, save_path, y_label, title):
+def bar_plot(data, save_path, y_label, title):
+    p=0.95
+    mp=1-p
+
+    identities=[]
+    per_data_identities=[]
+    datas=[]
+    for id in ordered_ids:
+        if id in data:
+            identities.append(id)
+            for _ in range(data[id].shape[0]):
+                per_data_identities.append(id)
+            datas.append(data[id])
+    
+    # https://en.wikipedia.org/wiki/Bonferroni_correction
+    single_bonferroni_corrected_p=1-mp/len(datas)
+    pairwise_bonferroni_corrected_p=1-mp/(len(datas)*(len(datas)-1))
+    
+    single_std_errs=[]
+    pairwise_std_errs=np.zeros((len(datas), len(datas)))
+    values=[]
+    # students t test for simultanious confidence intervals
+    for data in datas:
+        mean=np.mean(data)
+        low_err=st.t.interval(single_bonferroni_corrected_p, len(data)-1, loc=np.mean(data), scale=st.sem(data))[0]
+        high_err=mean+(mean-low_err)
+        single_std_errs.append([low_err, high_err])
+        values.append(mean)
+    single_std_errs=np.array(single_std_errs)
+    
+    # 2-sample t-tests with unequal variance for pairwise comparison, small p value=different
+    for ind_1 in range(len(datas)):
+        for ind_2 in range(len(datas)):
+            if ind_1!=ind_2:
+                tstat, pvalue=scipy.stats.ttest_ind(datas[ind_1], datas[ind_2])
+                pairwise_std_errs[ind_1, ind_2]=pvalue
+    
+    # ols noramlity test
+    try:
+        one_hot_ids=sklearn.preprocessing.OneHotEncoder(sparse=False).fit_transform(np.array(per_data_identities).reshape(-1, 1))
+    except:
+        print("No data to tukay test")
+        return
+    y=np.concatenate(datas)
+    ols_pvalues, bp_pvalue, fbpvalue=ols_test(one_hot_ids, y)
+                
+    results=["Pairwise p values. <0.05 indicates difference is significant"]
+    results.append([""]+identities)
+    for i in range(pairwise_std_errs.shape[0]):
+        results.append([])
+        for j in range(pairwise_std_errs.shape[0]+1):
+            if j==0:
+                results[i+1].append(identities[i])
+            else:
+                results[i+1].append(pairwise_std_errs[i][j-1])
+    
+    results.append(["OLS max p value, >=0.05 indicates normality (good)", np.amax(ols_pvalues)])
+    with open(os.path.join(save_path, title+".csv"), "w") as csvfile:
+        csv_writer=csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        csv_writer.writerows(results)       
 
     new_labels=[]
     new_values=[]
@@ -390,11 +449,11 @@ def bar_plot(labels, values, std_errs, save_path, y_label, title):
     add_ind=0
     for ind in range(len(ordered_ids)):
         id=ordered_ids[ind]
-        if id in labels:
-            add_ind=labels.index(id)
+        if id in identities:
+            add_ind=identities.index(id)
             new_labels.append(id)
             new_values.append(values[add_ind])
-            new_std_errs.append(std_errs[add_ind])
+            new_std_errs.append(single_std_errs[add_ind])
     labels=new_labels
     values=np.array(new_values)
     std_errs=np.array(new_std_errs)
@@ -403,7 +462,7 @@ def bar_plot(labels, values, std_errs, save_path, y_label, title):
 
     x_pos=np.array(list(range(values.shape[0])))
 
-    ax.bar(x_pos, values, yerr=values-std_errs[:,0], align='center', alpha=0.5, ecolor='black', capsize=7)
+    ax.bar(x_pos, values, yerr=values-single_std_errs[:,0], align='center', alpha=0.5, ecolor='black', capsize=7)
     ax.set_ylabel(y_label)
     ax.set_xticks(x_pos)
     ax.set_xticklabels(labels)
@@ -666,13 +725,13 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                         all_values[id_labels[-1]].append(data)
 
                         print(f"{cmd} | {metric_names[d_ind]} | {id_2} | mean: {mean} CI: ({low_err}, {high_err})")
-                    tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_{metric_names[d_ind]}')
+                    #tukey_test(cmd_data_dict, cmd_save_path, f'tukey_test_{cmd}_{metric_names[d_ind]}')
 
                     means=np.array(means)
                     stds=np.array(stds)
 
                     # Plot results for specific command
-                    bar_plot(id_labels, means, stds, cmd_save_path, metric_names[d_ind], cmd)
+                    #bar_plot(cmd_data_dict, cmd_save_path, metric_names[d_ind], cmd)
 
             # Plot results for all commands
             # ethnicity x gender for all cmds
@@ -704,11 +763,13 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
 
             all_means=np.array(all_means)
             all_stds=np.array(all_stds)
-            bar_plot(all_ids, all_means, all_stds, cmd_save_path, metric_names[d_ind], "All Commands")
+            bar_plot(all_data_dict_ethnicity_gender, cmd_save_path, metric_names[d_ind], "Bar All Commands Ethnicity Gender")
+            bar_plot(all_data_dict_ethnicity, cmd_save_path, metric_names[d_ind], "Bar All Commands Ethnicity")
+            bar_plot(all_data_dict_gender, cmd_save_path, metric_names[d_ind], "Bar All Commands Gender")
 
-            tukey_test(all_data_dict_ethnicity_gender, cmd_save_path, f'tukey_test_all_cmds_{metric_names[d_ind]}_ethnicity_gender')
-            tukey_test(all_data_dict_ethnicity, cmd_save_path, f'tukey_test_all_cmds_{metric_names[d_ind]}_ethnicity')
-            tukey_test(all_data_dict_gender, cmd_save_path, f'tukey_test_all_cmds_{metric_names[d_ind]}_gender')
+#             tukey_test(all_data_dict_ethnicity_gender, cmd_save_path, f'tukey_test_all_cmds_{metric_names[d_ind]}_ethnicity_gender')
+#             tukey_test(all_data_dict_ethnicity, cmd_save_path, f'tukey_test_all_cmds_{metric_names[d_ind]}_ethnicity')
+#             tukey_test(all_data_dict_gender, cmd_save_path, f'tukey_test_all_cmds_{metric_names[d_ind]}_gender')
 
 
 
@@ -717,7 +778,7 @@ if __name__ == '__main__':
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-20-pairwise-checkpoints-cfd/checkpoints")
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/criminal/")
+    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/checkpoints/")
 
     options, args = parser.parse_args()
     print(options)
