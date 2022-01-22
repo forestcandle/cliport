@@ -144,7 +144,10 @@ def tukey_test(data, save_path, title):
     tukey_df = pd.DataFrame(data=tukey._results_table.data[1:], columns=tukey._results_table.data[0])
     tukey_df.to_csv(file_path + ".csv")
     #fig = tukey.plot_simultaneous(xlabel='Tukey Mean Difference Significance Comparison Between All Pairs', ylabel='Identity Categories')
-    fig=tukey_plot_simultaneous(tukey, xlabel='Mean', ylabel='Identity')
+    error_bars = False  # This is a HACK to switch from tukey error bars to a categorical point mean plot.
+    if not error_bars:
+        title_string = title_string.replace('tukey ', '')
+    fig=tukey_plot_simultaneous(tukey, xlabel='Mean', ylabel='Identity', title_string=title_string)
     plt.tight_layout()
     plt.title(title_string)
     print('saving plot', file_path)
@@ -172,7 +175,7 @@ def tukey_test(data, save_path, title):
 
 
 def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, figsize=(10,6),
-                          xlabel=None, ylabel=None):
+                          xlabel=None, ylabel=None, title_string='Multiple Comparisons Between All Pairs (Tukey)', error_bars=False):
         """Plot a universal confidence interval of each group mean
 
         Visualize significant differences in a plot with one confidence
@@ -285,24 +288,26 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
                 else:
                     nsigidx.append(i)
             #Plot the main comparison
-            ax1.errorbar(means[midx], midx, xerr=self.halfwidths[midx],
+            ax1.errorbar(means[midx], midx, xerr=self.halfwidths[midx] if error_bars else 0,
                          marker='o', linestyle='None', color='b', ecolor='b')
-            ax1.plot([minrange[midx]]*2, [-1, self._multicomp.ngroups],
-                     linestyle='--', color='0.7')
-            ax1.plot([maxrange[midx]]*2, [-1, self._multicomp.ngroups],
-                     linestyle='--', color='0.7')
+            ax1.annotate(midx, means[midx])
+            if not error_bars:
+                ax1.plot([minrange[midx]]*2, [-1, self._multicomp.ngroups],
+                        linestyle='--', color='0.7')
+                ax1.plot([maxrange[midx]]*2, [-1, self._multicomp.ngroups],
+                        linestyle='--', color='0.7')
             #Plot those that are significantly different
             if len(sigidx) > 0:
                 ax1.errorbar(means[sigidx], sigidx,
-                             xerr=self.halfwidths[sigidx], marker='o',
+                             xerr=self.halfwidths[sigidx] if error_bars else 0, marker='o',
                              linestyle='None', color='r', ecolor='r')
             #Plot those that are not significantly different
             if len(nsigidx) > 0:
                 ax1.errorbar(means[nsigidx], nsigidx,
-                             xerr=self.halfwidths[nsigidx], marker='o',
+                             xerr=self.halfwidths[nsigidx] if error_bars else 0, marker='o',
                              linestyle='None', color='0.5', ecolor='0.5')
 
-        ax1.set_title('Multiple Comparisons Between All Pairs (Tukey)')
+        ax1.set_title(title_string)
         r = np.max(maxrange) - np.min(minrange)
         ax1.set_ylim([-1, tukey_hsd_results._multicomp.ngroups])
         ax1.set_xlim([np.min(minrange) - r / 10., np.max(maxrange) + r / 10.])
@@ -716,7 +721,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
 
 if __name__ == '__main__':
     parser = OptionParser()
-    #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
+    # parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-20-pairwise-checkpoints-cfd/checkpoints")
     parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-67-strings-2022-01-21-pairwise/checkpoints")
