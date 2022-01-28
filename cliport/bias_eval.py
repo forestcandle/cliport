@@ -773,8 +773,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                 all_stds.append([low_err, high_err])
 
             all_means=np.array(all_means)
-            all_stds=np.array(all_stds
-                              )
+            all_stds=np.array(all_stds)
             bar_plot(all_data_dict_ethnicity_gender, cmd_save_path, metric_names[d_ind], f"{metric_names[d_ind]} All Commands Ethnicity x Gender")
             bar_plot(all_data_dict_ethnicity, cmd_save_path, metric_names[d_ind], f"{metric_names[d_ind]} All Commands Ethnicity")
             bar_plot(all_data_dict_gender, cmd_save_path, metric_names[d_ind], f"{metric_names[d_ind]} All Commands Gender")
