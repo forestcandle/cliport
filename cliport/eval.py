@@ -75,6 +75,7 @@ def main(vcfg):
     if vcfg['eval_task']=="packing-unseen-google-objects-race-seq-pairwise":
         command_strs=[command_strs[vcfg['adjective_sentance_num']]]
         id_exp_name=f"one-{command_strs[0]}_{identity_groups[vcfg['identity_group_num_0']][0]}_{identity_groups[vcfg['identity_group_num_0']][1]}_{identity_groups[vcfg['identity_group_num_1']][0]}_{identity_groups[vcfg['identity_group_num_1']][1]}"
+        wm_id_exp_name=f"one-{command_strs[0]}_W_M_W_M"
     else:
         id_exp_name=""
         
@@ -88,10 +89,12 @@ def main(vcfg):
     folds = int(vcfg['folds'])
     fold = int(vcfg['fold'])
     json_str = f'{name}-{json_name}-{id_exp_name}'
+    wm_json_str = f'{name}-{json_name}-{wm_id_exp_name}'
     # save separate log files when running multiple processes that complete different parts of the same experiment
     if folds > 0:
         json_str = f'fold{fold}-' + json_str
     save_json = os.path.join(save_path, json_str)
+    wm_save_json = os.path.join(save_path, wm_json_str)
 
     # Load existing results.
     existing_results = {}
@@ -159,104 +162,107 @@ def main(vcfg):
             # Run testing and save total rewards with last transition info.        
             for j in trange(command_string_min, command_string_max):
                 cmd_reward=0
-                num_runs_save_path=save_json+str(j)+".p"
+                num_runs_save_path=wm_save_json+str(j)+".p"
                 if vcfg['identity_group_num_0']!=0:
                     n_demos=pickle.load(open(num_runs_save_path, "rb"))
                 for i in trange(0, n_demos):
-                    k = (j+1) * (i+1) + i
-                    episode, seed = ds.load(0)
-                    seed = k
-#                     if vcfg['eval_task']=="packing-unseen-google-objects-race-seq-pairwise":
-#                         seed=k+n_demos*((vcfg['adjective_sentance_num']+1)*(vcfg['identity_group_num']+1)+vcfg['identity_group_num'])
-                    
-                    np.random.seed(seed)
-                    current_command_string = command_strs[j]
-                    if completed_experiments[j, i]:
-                        print(f"skipping saved exp {j} {i}")
-                        continue
-
-                    goal = episode[-1]
-                    total_reward = 0
-
-                    # set task
-                    if 'multi' in dataset_type:
-                        task_name = ds.get_curr_task()
-                        task = tasks.names[task_name](current_command_string)
-                        print(f'Evaluating on {task_name}')
-                    else:
-                        task_name = vcfg['eval_task']
-                        task = tasks.names[task_name]()
-
-                    task.mode = mode
-                    if vcfg['eval_task']=="packing-unseen-google-objects-race-seq-pairwise":
-                        task.identity_1 = identity_groups[vcfg['identity_group_num_0']]
-                        task.identity_2 = identity_groups[vcfg['identity_group_num_1']]
+                    try:
+                        k = (j+1) * (i+1) + i
+                        episode, seed = ds.load(0)
+                        seed = k
+    #                     if vcfg['eval_task']=="packing-unseen-google-objects-race-seq-pairwise":
+    #                         seed=k+n_demos*((vcfg['adjective_sentance_num']+1)*(vcfg['identity_group_num']+1)+vcfg['identity_group_num'])
                         
-                    num_command_strs = len(task.command_strs)
-                    if num_command_strs:
-                        task.lang_template = task.command_strs[j]
-
-                    # env.seed(np.random.randint(2**32-1))
-                    env.seed(seed)
-                    env.set_task(task)
-                    obs = env.reset()
-                    info = env.info
-                    reward = 0
-
-                    # Start recording video (NOTE: super slow)
-                    if record:
-                        video_name = f'{task_name}-{k+1:06d}_desc-{current_command_string}'
-                        if 'multi' in vcfg['model_task']:
-                            video_name = f"{vcfg['model_task']}-{video_name}"
-
-                        env.start_rec(video_name)
-
-                    for step in range(task.max_steps):
-                        act = agent.act(obs, info, goal)
-                        lang_goal = info['lang_goal']
-                        print(f'Lang Goal: {lang_goal}')
-                        obs, reward, done, info = env.step(act)
-
-                        object_info = []
-                        object_info.append(j)
-                        object_info.append(i)
-                        object_info.append(task.command_strs[j])
-                        object_info.append(step)
-
-                        if "pose" in info:
-                            for obj_id in info['pose']:
-                                object_info.append(task.object_log_info[obj_id])
-                                object_info.append(info['pose'][obj_id])
-                                object_info.append(info['placed'][obj_id])
-                            object_infos.append(object_info)
+                        np.random.seed(seed)
+                        current_command_string = command_strs[j]
+                        if completed_experiments[j, i]:
+                            print(f"skipping saved exp {j} {i}")
+                            continue
+    
+                        goal = episode[-1]
+                        total_reward = 0
+    
+                        # set task
+                        if 'multi' in dataset_type:
+                            task_name = ds.get_curr_task()
+                            task = tasks.names[task_name](current_command_string)
+                            print(f'Evaluating on {task_name}')
                         else:
-                            print("pose not in info", info)
+                            task_name = vcfg['eval_task']
+                            task = tasks.names[task_name]()
+    
+                        task.mode = mode
+                        if vcfg['eval_task']=="packing-unseen-google-objects-race-seq-pairwise":
+                            task.identity_1 = identity_groups[vcfg['identity_group_num_0']]
+                            task.identity_2 = identity_groups[vcfg['identity_group_num_1']]
+                            
+                        num_command_strs = len(task.command_strs)
+                        if num_command_strs:
+                            task.lang_template = task.command_strs[j]
+    
+                        # env.seed(np.random.randint(2**32-1))
+                        env.seed(seed)
+                        env.set_task(task)
+                        obs = env.reset()
+                        info = env.info
+                        reward = 0
+    
+                        # Start recording video (NOTE: super slow)
+                        if record:
+                            video_name = f'{task_name}-{k+1:06d}_desc-{current_command_string}'
+                            if 'multi' in vcfg['model_task']:
+                                video_name = f"{vcfg['model_task']}-{video_name}"
+    
+                            env.start_rec(video_name)
+    
+                        for step in range(task.max_steps):
+                            act = agent.act(obs, info, goal)
+                            lang_goal = info['lang_goal']
+                            print(f'Lang Goal: {lang_goal}')
                             obs, reward, done, info = env.step(act)
-
-                        total_reward += reward
-                        print(f'Total Reward: {total_reward:.3f} | Done: {done}\n')
-                        if done:
+    
+                            object_info = []
+                            object_info.append(j)
+                            object_info.append(i)
+                            object_info.append(task.command_strs[j])
+                            object_info.append(step)
+    
+                            if "pose" in info:
+                                for obj_id in info['pose']:
+                                    object_info.append(task.object_log_info[obj_id])
+                                    object_info.append(info['pose'][obj_id])
+                                    object_info.append(info['placed'][obj_id])
+                                object_infos.append(object_info)
+                            else:
+                                print("pose not in info", info)
+                                obs, reward, done, info = env.step(act)
+    
+                            total_reward += reward
+                            print(f'Total Reward: {total_reward:.3f} | Done: {done}\n')
+                            if done:
+                                break
+    
+                        cmd_reward+=total_reward
+                        df = pd.DataFrame(data=object_infos)
+                        df.to_csv(save_json+".csv")
+                        pickle.dump((object_infos, cmd_reward), open(save_json+".p", "wb"))
+    
+                        results.append((total_reward, info))
+                        mean_reward = np.mean([r for r, i in results])
+                        print(f'Mean: {mean_reward} | Task: {task_name} | Ckpt: {ckpt}')
+    
+                        # End recording video
+                        if record:
+                            env.end_rec()
+                        completed_experiments[j, i] = 1
+                        
+                        # Break after certain # WM places
+                        if cmd_reward>=500 and vcfg['identity_group_num_0']==0:
+                            print("cumulative reward exceeded, cumulative reward: "+str(cmd_reward))
+                            pickle.dump(n_demos, open(num_runs_save_path, "wb"))
                             break
-
-                    cmd_reward+=total_reward
-                    df = pd.DataFrame(data=object_infos)
-                    df.to_csv(save_json+".csv")
-                    pickle.dump((object_infos, cmd_reward), open(save_json+".p", "wb"))
-
-                    results.append((total_reward, info))
-                    mean_reward = np.mean([r for r, i in results])
-                    print(f'Mean: {mean_reward} | Task: {task_name} | Ckpt: {ckpt}')
-
-                    # End recording video
-                    if record:
-                        env.end_rec()
-                    completed_experiments[j, i] = 1
-                    
-                    # Break after certain # WM places
-                    if cmd_reward>=500 and vcfg['identity_group_num_0']==0:
-                        print("cumulative reward exceeded, cumulative reward: "+str(cmd_reward))
-                        pickle.dump(n_demos, open(num_runs_save_path, "wb"))
-                        break
+                    except Exception as e:
+                        logging.error(traceback.format_exc())
                         
 
                 all_results[ckpt] = {
