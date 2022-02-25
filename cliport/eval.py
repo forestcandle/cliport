@@ -58,14 +58,14 @@ def main(vcfg):
                                             tcfg,
                                             group=eval_task,
                                             mode=mode,
-                                            n_demos=vcfg['n_demos'],
+                                            n_demos=100,
                                             augment=False)
     # elif mode is not 'test':
     else:
         # TODO HACK test mode disabled for race experiments, make code work properly
         ds = dataset.RavensDataset(os.path.join(vcfg['data_dir'], f"{eval_task}-{mode}"),
                                    tcfg,
-                                   n_demos=vcfg['n_demos'],
+                                   n_demos=100,
                                    augment=False)
 
     all_results = {}
@@ -165,8 +165,8 @@ def main(vcfg):
                     n_demos=pickle.load(open(num_runs_save_path, "rb"))
                 for i in trange(0, n_demos):
                     k = (j+1) * (i+1) + i
-                    episode, seed = ds.load(i)
-                    
+                    episode, seed = ds.load(0)
+                    seed = k
 #                     if vcfg['eval_task']=="packing-unseen-google-objects-race-seq-pairwise":
 #                         seed=k+n_demos*((vcfg['adjective_sentance_num']+1)*(vcfg['identity_group_num']+1)+vcfg['identity_group_num'])
                     
