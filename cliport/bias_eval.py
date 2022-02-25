@@ -28,12 +28,13 @@ ordered_ids=['AF', 'AM', 'BF', 'BM', 'LF', 'LM', 'WF', 'WM', 'A', 'B', 'L', 'W',
 def ols_test(X, y):
     X_constant = sm.add_constant(X)
     lin_reg = sm.OLS(y,X_constant).fit()
-    
-    names = ['Lagrange multiplier statistic', 'p-value',
-        'f-value', 'f p-value']
-    test = sms.het_breuschpagan(lin_reg.resid, lin_reg.model.exog)
-    
-    return lin_reg.pvalues, test[1], test[3]
+
+    bp_test_result_list_names = ['bptest Lagrange multiplier statistic', 'bptest lm p-value',
+        'bptest f-value', 'bptest f p-value']
+    bp_test_result_list = sms.het_breuschpagan(lin_reg.resid, lin_reg.model.exog)
+
+    return lin_reg.pvalues, bp_test_result_list, bp_test_result_list_names
+
 
 # def breusch_pagan_test(x, y):
 #     '''
@@ -119,7 +120,7 @@ def tukey_test(data, save_path, title):
         print("No data to tukay test")
         return
     y=np.concatenate(datas)
-    ols_pvalues, bp_pvalue, fbpvalue=ols_test(one_hot_ids, y)
+    ols_pvalues, bp_test_result_list, bp_test_result_list_names = ols_test(one_hot_ids, y)
     #LM, bp_pval, test_result=breusch_pagan_test(one_hot_ids, y)
 
     title_string = title.replace('_', ' ')
@@ -401,11 +402,11 @@ def bar_plot(data, save_path, y_label, title):
             for _ in range(data[id].shape[0]):
                 per_data_identities.append(id)
             datas.append(data[id])
-    
+
     # https://en.wikipedia.org/wiki/Bonferroni_correction
     single_bonferroni_corrected_p=1-mp/len(datas)
     pairwise_bonferroni_corrected_p=1-mp/((len(datas)*(len(datas)-1))/2.0)
-    
+
     single_std_errs=[]
     pairwise_std_errs=np.zeros((len(datas), len(datas)))
     values=[]
@@ -417,14 +418,14 @@ def bar_plot(data, save_path, y_label, title):
         single_std_errs.append([low_err, high_err])
         values.append(mean)
     single_std_errs=np.array(single_std_errs)
-    
+
     # 2-sample t-tests with unequal variance for pairwise comparison, small p value=different
     for ind_1 in range(len(datas)):
         for ind_2 in range(len(datas)):
             if ind_1!=ind_2:
                 tstat, pvalue=scipy.stats.ttest_ind(datas[ind_1], datas[ind_2])
                 pairwise_std_errs[ind_1, ind_2]=pvalue
-    
+
     # ols noramlity test
     try:
         one_hot_ids=sklearn.preprocessing.OneHotEncoder(sparse=False).fit_transform(np.array(per_data_identities).reshape(-1, 1))
@@ -433,8 +434,8 @@ def bar_plot(data, save_path, y_label, title):
         return
     y=np.concatenate(datas)
     print(title, "allmean", np.mean(y))
-    ols_pvalues, bp_pvalue, fbpvalue=ols_test(one_hot_ids, y)
-                
+    ols_pvalues, bp_test_result_list, bp_test_result_list_names = ols_test(one_hot_ids, y)
+
     results=["(Pairwise p values, difference in means). p<0.05 indicates difference is significant"]
     results.append([""]+identities)
     for i in range(pairwise_std_errs.shape[0]):
@@ -444,11 +445,11 @@ def bar_plot(data, save_path, y_label, title):
                 results[i+1].append(identities[i])
             else:
                 results[i+1].append((pairwise_std_errs[i][j-1], values[i]-values[j-1]))
-    
+
     results.append(["OLS max p value, >=0.05 indicates normality (good)", np.amax(ols_pvalues)])
     with open(os.path.join(save_path, title+".csv"), "w") as csvfile:
         csv_writer=csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        csv_writer.writerows(results)       
+        csv_writer.writerows(results)
 
     new_labels=[]
     new_values=[]
@@ -774,12 +775,11 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                 all_stds.append([low_err, high_err])
 
             all_means=np.array(all_means)
-            all_stds=np.array(all_stds
-                              )
+            all_stds=np.array(all_stds)
             bar_plot(all_data_dict_ethnicity_gender, cmd_save_path, metric_names[d_ind], f"{metric_names[d_ind]} All Commands Ethnicity x Gender")
             bar_plot(all_data_dict_ethnicity, cmd_save_path, metric_names[d_ind], f"{metric_names[d_ind]} All Commands Ethnicity")
             bar_plot(all_data_dict_gender, cmd_save_path, metric_names[d_ind], f"{metric_names[d_ind]} All Commands Gender")
-            
+
             all_dict=all_data_dict_ethnicity_gender
             all_dict.update(all_data_dict_ethnicity)
             all_dict.update(all_data_dict_gender)
