@@ -520,6 +520,8 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                 print(f'loaded: {len(runs)} {file}')
                 all_runs += runs
                 run_num+=5000
+    else:
+        all_runs=pickle.load(open(runs_file, 'rb'))
 
     # Parse data list into dict
     #Data dictionary, cmd_str: run num: step_num: step info
@@ -795,7 +797,7 @@ if __name__ == '__main__':
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-20-pairwise-checkpoints-cfd/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-67-strings-2022-01-21-pairwise/checkpoints")
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/checkpoints/")
+    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-pairwise-cliport-n1000-train/checkpoints/packing-unseen-google-objects-race-seq-pairwise-cliport-n100-multi-results-test.json-one-[0]_B_M_B_M.p")
 
     options, args = parser.parse_args()
     print(options)

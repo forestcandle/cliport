@@ -22,6 +22,11 @@ from tqdm import tqdm, trange
 # # Description of target item to be used in language prompt
 # parser.add_option("--target_item_desc", dest="target_item_desc", default="cube")
 
+identity_groups=[['W', "M"], ['W', "F"],
+                       ['A', "M"], ['A', "F"],
+                       ['L', "M"], ['L', "F"],
+                       ['B', "M"], ['B', "F"]]
+
 @hydra.main(config_path='./cfg', config_name='eval')
 def main(vcfg):
     # Load train cfg
@@ -64,6 +69,15 @@ def main(vcfg):
 
     all_results = {}
     name = '{}-{}-n{}'.format(eval_task, vcfg['agent'], vcfg['n_demos'])
+    
+    
+    command_strs = command_strings.build_command_strings('reduced')
+    if vcfg['eval_task']=="packing-unseen-google-objects-race-seq-pairwise":
+        command_strs=[command_strs[vcfg['adjective_sentance_num']]]
+        id_exp_name=f"one-{command_strs[0]}_{identity_groups[vcfg['identity_group_num_0']][0]}_{identity_groups[vcfg['identity_group_num_0']][1]}_{identity_groups[vcfg['identity_group_num_1']][0]}_{identity_groups[vcfg['identity_group_num_1']][1]}"
+    else:
+        id_exp_name=""
+        
 
     # Save path for results.
     json_name = f"multi-results-{mode}.json" if 'multi' in vcfg['model_path'] else f"results-{mode}.json"
@@ -73,7 +87,7 @@ def main(vcfg):
         os.makedirs(save_path)
     folds = int(vcfg['folds'])
     fold = int(vcfg['fold'])
-    json_str = f'{name}-{json_name}'
+    json_str = f'{name}-{json_name}-{id_exp_name}'
     # save separate log files when running multiple processes that complete different parts of the same experiment
     if folds > 0:
         json_str = f'fold{fold}-' + json_str
@@ -87,10 +101,11 @@ def main(vcfg):
         with open(save_json, 'r') as f:
             existing_results = json.load(f)
 
-        # Load existing log.
-    pickle_path = save_json+".p"
+    # Load existing log.
+    pickle_path = save_json+f"_{id_exp_name}"+".p"
+    csv_path = save_json+f"_{id_exp_name}"+".csv"
     if os.path.exists(pickle_path):
-        object_infos = pickle.load(open(pickle_path, "rb"))
+        object_infos, cmd_reward = pickle.load(open(pickle_path, "rb"))
 
     # Make a list of checkpoints to eval.
     ckpts_to_eval = list_ckpts_to_eval(vcfg, existing_results)
@@ -124,7 +139,6 @@ def main(vcfg):
             record = vcfg['record']['save_video']
             n_demos = int(vcfg['n_demos'])
             # HACK TODO clean up command string iteration, re-enable other tasks
-            command_strs = command_strings.build_command_strings('reduced')
             num_command_strs = len(command_strs)
             # n_demos_per_command = n_demos
             # n_demos = n_demos * num_command_strs
@@ -142,11 +156,19 @@ def main(vcfg):
                 for log in object_infos:
                     completed_experiments[log[0], log[1]] = 1
 
-            # Run testing and save total rewards with last transition info.
+            # Run testing and save total rewards with last transition info.        
             for j in trange(command_string_min, command_string_max):
+                cmd_reward=0
+                num_runs_save_path=save_json+str(j)+".p"
+                if vcfg['identity_group_num_0']!=0:
+                    n_demos=pickle.load(open(num_runs_save_path, "rb"))
                 for i in trange(0, n_demos):
                     k = (j+1) * (i+1) + i
                     episode, seed = ds.load(i)
+                    
+#                     if vcfg['eval_task']=="packing-unseen-google-objects-race-seq-pairwise":
+#                         seed=k+n_demos*((vcfg['adjective_sentance_num']+1)*(vcfg['identity_group_num']+1)+vcfg['identity_group_num'])
+                    
                     np.random.seed(seed)
                     current_command_string = command_strs[j]
                     if completed_experiments[j, i]:
@@ -166,6 +188,10 @@ def main(vcfg):
                         task = tasks.names[task_name]()
 
                     task.mode = mode
+                    if vcfg['eval_task']=="packing-unseen-google-objects-race-seq-pairwise":
+                        task.identity_1 = identity_groups[vcfg['identity_group_num_0']]
+                        task.identity_2 = identity_groups[vcfg['identity_group_num_1']]
+                        
                     num_command_strs = len(task.command_strs)
                     if num_command_strs:
                         task.lang_template = task.command_strs[j]
@@ -212,9 +238,10 @@ def main(vcfg):
                         if done:
                             break
 
+                    cmd_reward+=total_reward
                     df = pd.DataFrame(data=object_infos)
                     df.to_csv(save_json+".csv")
-                    pickle.dump(object_infos, open(save_json+".p", "wb"))
+                    pickle.dump((object_infos, cmd_reward), open(save_json+".p", "wb"))
 
                     results.append((total_reward, info))
                     mean_reward = np.mean([r for r, i in results])
@@ -224,6 +251,13 @@ def main(vcfg):
                     if record:
                         env.end_rec()
                     completed_experiments[j, i] = 1
+                    
+                    # Break after certain # WM places
+                    if cmd_reward>=500 and vcfg['identity_group_num_0']==0:
+                        print("cumulative reward exceeded, cumulative reward: "+str(cmd_reward))
+                        pickle.dump(n_demos, open(num_runs_save_path, "wb"))
+                        break
+                        
 
                 all_results[ckpt] = {
                     'episodes': results,

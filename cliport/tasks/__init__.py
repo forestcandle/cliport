@@ -22,6 +22,7 @@ from cliport.tasks.packing_google_objects import PackingSeenGoogleObjectsSeq
 from cliport.tasks.packing_google_objects import PackingChicagoFaceBlocks
 from cliport.tasks.packing_google_objects import PackingUnseenGoogleObjectsSeq
 from cliport.tasks.packing_google_objects import PackingUnseenGoogleObjectsRaceSeq
+from cliport.tasks.packing_google_objects import PackingSeenGoogleObjectsSeqPairwise
 from cliport.tasks.packing_google_objects import PackingUnseenGoogleObjectsRaceBlackSeq
 from cliport.tasks.packing_google_objects import PackingUnseenGoogleObjectsRaceWhiteSeq
 from cliport.tasks.packing_google_objects import PackingSeenGoogleObjectsGroup
@@ -76,6 +77,7 @@ names = {
     'packing-unseen-google-objects-seq': PackingUnseenGoogleObjectsSeq,
     'packing-chicago-face-blocks-seq': PackingChicagoFaceBlocks,
     'packing-unseen-google-objects-race-seq': PackingUnseenGoogleObjectsRaceSeq,
+    'packing-unseen-google-objects-race-seq-pairwise': PackingSeenGoogleObjectsSeqPairwise,
     'packing-unseen-google-objects-race-black-seq': PackingUnseenGoogleObjectsRaceBlackSeq,
     'packing-unseen-google-objects-race-white-seq': PackingUnseenGoogleObjectsRaceWhiteSeq,
     'packing-seen-google-objects-group': PackingSeenGoogleObjectsGroup,

@@ -87,7 +87,7 @@ def build_command_strings(subset='all', entity_list=None):
     XY = np.unique(XY)
     commands = ['pack the ' + description + ' in the brown box' for description in XY]
 
-    return commands
+    return commands#['pack the criminal block in the brown box']
 
 
 if __name__ == '__main__':
