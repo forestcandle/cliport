@@ -245,9 +245,10 @@ def main(vcfg):
                                 break
     
                         cmd_reward+=total_reward
-                        df = pd.DataFrame(data=object_infos)
-                        df.to_csv(save_json+".csv")
-                        pickle.dump((object_infos, cmd_reward), open(save_json+".p", "wb"))
+                        if i%25==0:
+                            df = pd.DataFrame(data=object_infos)
+                            df.to_csv(save_json+".csv")
+                            pickle.dump((object_infos, cmd_reward), open(save_json+".p", "wb"))
     
                         results.append((total_reward, info))
                         mean_reward = np.mean([r for r, i in results])
@@ -258,10 +259,16 @@ def main(vcfg):
                             env.end_rec()
                         completed_experiments[j, i] = 1
                         
+                        print("cumulative reward: "+str(cmd_reward))
                         # Break after certain # WM places
                         if cmd_reward>=500 and vcfg['identity_group_num_0']==0:
                             print("cumulative reward exceeded, cumulative reward: "+str(cmd_reward))
                             pickle.dump(n_demos, open(num_runs_save_path, "wb"))
+                            
+                            df = pd.DataFrame(data=object_infos)
+                            df.to_csv(save_json+".csv")
+                            pickle.dump((object_infos, cmd_reward), open(save_json+".p", "wb"))
+                            
                             break
                     except Exception as e:
                         logging.error(traceback.format_exc())
