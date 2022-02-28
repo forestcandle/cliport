@@ -4,7 +4,7 @@ import itertools
 
 if __name__ == '__main__':
     args=[]
-    for sentance_ind in range(10):
+    for sentance_ind in range(180):
         for id_ind in range(1):
             args.append(f"adjective_sentance_num={sentance_ind} identity_group_num_0={id_ind}")
     
