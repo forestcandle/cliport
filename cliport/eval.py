@@ -167,6 +167,7 @@ def main(vcfg):
                 num_runs_save_path=wm_save_json+str(j)+".p"
                 if vcfg['identity_group_num_0']!=0:
                     n_demos=pickle.load(open(num_runs_save_path, "rb"))
+                logging.info(f"running for {n_demos} trials")
                 for i in trange(0, n_demos):
                     try:
                         k = (j+1) * (i+1) + i
