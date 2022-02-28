@@ -262,9 +262,9 @@ def main(vcfg):
                         
                         print("cumulative reward: "+str(cmd_reward), flush=True)
                         # Break after certain # WM places
-                        if cmd_reward>=500 and vcfg['identity_group_num_0']==0:
+                        if cmd_reward>=5 and vcfg['identity_group_num_0']==0:
                             print("cumulative reward exceeded, cumulative reward: "+str(cmd_reward), flush=True)
-                            pickle.dump(n_demos, open(num_runs_save_path, "wb"))
+                            pickle.dump(i, open(num_runs_save_path, "wb"))
                             
                             df = pd.DataFrame(data=object_infos)
                             df.to_csv(save_json+".csv")
