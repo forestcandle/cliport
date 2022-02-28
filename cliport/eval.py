@@ -139,7 +139,7 @@ def main(vcfg):
 
             # Load checkpoint
             agent.load(model_file)
-            print(f"Loaded: {model_file}")
+            print(f"Loaded: {model_file}", flush=True)
 
             record = vcfg['record']['save_video']
             n_demos = int(vcfg['n_demos'])
@@ -167,7 +167,7 @@ def main(vcfg):
                 num_runs_save_path=wm_save_json+str(j)+".p"
                 if vcfg['identity_group_num_0']!=0:
                     n_demos=pickle.load(open(num_runs_save_path, "rb"))
-                logging.info(f"running for {n_demos} trials")
+                print(f"running for {n_demos} trials", flush=True)
                 for i in trange(0, n_demos):
                     try:
                         k = (j+1) * (i+1) + i
@@ -179,7 +179,7 @@ def main(vcfg):
                         np.random.seed(seed)
                         current_command_string = command_strs[j]
                         if completed_experiments[j, i]:
-                            print(f"skipping saved exp {j} {i}")
+                            print(f"skipping saved exp {j} {i}", flush=True)
                             continue
     
                         goal = episode[-1]
@@ -189,7 +189,7 @@ def main(vcfg):
                         if 'multi' in dataset_type:
                             task_name = ds.get_curr_task()
                             task = tasks.names[task_name](current_command_string)
-                            print(f'Evaluating on {task_name}')
+                            print(f'Evaluating on {task_name}', flush=True)
                         else:
                             task_name = vcfg['eval_task']
                             task = tasks.names[task_name]()
@@ -221,7 +221,7 @@ def main(vcfg):
                         for step in range(task.max_steps):
                             act = agent.act(obs, info, goal)
                             lang_goal = info['lang_goal']
-                            print(f'Lang Goal: {lang_goal}')
+                            print(f'Lang Goal: {lang_goal}', flush=True)
                             obs, reward, done, info = env.step(act)
     
                             object_info = []
@@ -237,11 +237,11 @@ def main(vcfg):
                                     object_info.append(info['placed'][obj_id])
                                 object_infos.append(object_info)
                             else:
-                                print("pose not in info", info)
+                                print("pose not in info", info, flush=True)
                                 obs, reward, done, info = env.step(act)
     
                             total_reward += reward
-                            print(f'Total Reward: {total_reward:.3f} | Done: {done}\n')
+                            print(f'Total Reward: {total_reward:.3f} | Done: {done}\n', flush=True)
                             if done:
                                 break
     
@@ -253,17 +253,17 @@ def main(vcfg):
     
                         results.append((total_reward, info))
                         mean_reward = np.mean([r for r, i in results])
-                        print(f'Mean: {mean_reward} | Task: {task_name} | Ckpt: {ckpt}')
+                        print(f'Mean: {mean_reward} | Task: {task_name} | Ckpt: {ckpt}', flush=True)
     
                         # End recording video
                         if record:
                             env.end_rec()
                         completed_experiments[j, i] = 1
                         
-                        print("cumulative reward: "+str(cmd_reward))
+                        print("cumulative reward: "+str(cmd_reward), flush=True)
                         # Break after certain # WM places
                         if cmd_reward>=500 and vcfg['identity_group_num_0']==0:
-                            print("cumulative reward exceeded, cumulative reward: "+str(cmd_reward))
+                            print("cumulative reward exceeded, cumulative reward: "+str(cmd_reward), flush=True)
                             pickle.dump(n_demos, open(num_runs_save_path, "wb"))
                             
                             df = pd.DataFrame(data=object_infos)
