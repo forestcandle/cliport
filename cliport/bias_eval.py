@@ -405,7 +405,7 @@ def bar_plot(data, save_path, y_label, title):
 
     # https://en.wikipedia.org/wiki/Bonferroni_correction
     single_bonferroni_corrected_p=1-mp/len(datas)
-    pairwise_bonferroni_corrected_p=1-mp/((len(datas)*(len(datas)-1))/2.0)
+    #pairwise_bonferroni_corrected_p=1-mp/((len(datas)*(len(datas)-1))/2.0)
 
     single_std_errs=[]
     pairwise_std_errs=np.zeros((len(datas), len(datas)))
@@ -509,11 +509,11 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
         all_runs= []
         run_num=0
         for file in tqdm(os.listdir(runs_file)):
-            if file[-2:] == '.p':
+            if file[-2:] == '.p' and file[-3:] != '0.p':
                 file_to_load = os.path.join(runs_file, file)
 
                 try:
-                    runs=pickle.load(open(file_to_load, 'rb'))
+                    runs, _=pickle.load(open(file_to_load, 'rb'))
                 except:
                     print(f"SKIPPED pickled log that failed to load with an exception: {file}")
                 for run in runs:
@@ -529,6 +529,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
     data_dict={}
     for run in tqdm(all_runs):
         cmd_str=run[2]
+        print(cmd_str)
         if cmd_str not in data_dict:
             data_dict[cmd_str]={}
         run_num=run[1]
@@ -797,7 +798,7 @@ if __name__ == '__main__':
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-20-pairwise-checkpoints-cfd/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-67-strings-2022-01-21-pairwise/checkpoints")
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-pairwise-cliport-n1000-train/checkpoints/packing-unseen-google-objects-race-seq-pairwise-cliport-n100-multi-results-test.json-one-[0]_B_M_B_M.p")
+    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/single/single_runs/")
 
     options, args = parser.parse_args()
     print(options)
