@@ -177,13 +177,12 @@ def main(vcfg):
     #                         seed=k+n_demos*((vcfg['adjective_sentance_num']+1)*(vcfg['identity_group_num']+1)+vcfg['identity_group_num'])
                         
                         np.random.seed(seed)
-                        if vcfg['eval_task']=="packing-unseen-google-objects-race-seq-pairwise":
-                            current_command_string=[command_strs[vcfg['adjective_sentance_num']]]
-                        else:
-                            current_command_string = command_strs[j]
+                        current_command_string = command_strs[j]
                         if completed_experiments[j, i]:
                             print(f"skipping saved exp {j} {i}", flush=True)
                             continue
+                        
+                        print(f"cmd str {current_command_string}", flush=True)
     
                         goal = episode[-1]
                         total_reward = 0
