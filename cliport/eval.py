@@ -229,7 +229,7 @@ def main(vcfg):
                             object_info = []
                             object_info.append(j)
                             object_info.append(i)
-                            object_info.append(task.command_strs[j])
+                            object_info.append(current_command_string)
                             object_info.append(step)
     
                             if "pose" in info:
