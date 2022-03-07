@@ -248,10 +248,10 @@ def main(vcfg):
                                 break
     
                         cmd_reward+=total_reward
-                        if i%25==0:
+                        if i%250==0:
                             df = pd.DataFrame(data=object_infos)
-                            df.to_csv(save_json+".csv")
-                            pickle.dump((object_infos, cmd_reward), open(save_json+".p", "wb"))
+                            df.to_csv(csv_path)
+                            pickle.dump((object_infos, cmd_reward), pickle_path)
     
                         results.append((total_reward, info))
                         mean_reward = np.mean([r for r, i in results])
@@ -269,8 +269,8 @@ def main(vcfg):
                             pickle.dump(i, open(num_runs_save_path, "wb"))
                             
                             df = pd.DataFrame(data=object_infos)
-                            df.to_csv(save_json+".csv")
-                            pickle.dump((object_infos, cmd_reward), open(save_json+".p", "wb"))
+                            df.to_csv(csv_path)
+                            pickle.dump((object_infos, cmd_reward), pickle_path)
                             
                             break
                     except Exception as e:
