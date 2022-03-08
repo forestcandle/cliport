@@ -282,6 +282,9 @@ def main(vcfg):
                     'mean_reward': mean_reward,
                 }
 
+            df = pd.DataFrame(data=object_infos)
+            df.to_csv(csv_path)
+            pickle.dump((object_infos, cmd_reward), pickle_path)
         # Save results in a json file.
         if vcfg['save_results']:
 
