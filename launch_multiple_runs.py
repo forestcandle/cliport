@@ -4,8 +4,8 @@ import itertools
 
 if __name__ == '__main__':
     args=[]
-    for sentance_ind in range([52, 137]):
-        for id_ind in range([0,6]):
+    for sentance_ind in range(180):
+        for id_ind in range(0,1):
             args.append(f"adjective_sentance_num={sentance_ind} identity_group_num_0={id_ind}")
     
     for ind in range(len(args)):

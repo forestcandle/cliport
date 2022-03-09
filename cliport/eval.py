@@ -269,7 +269,7 @@ def main(vcfg):
                         
                         print("cumulative reward: "+str(cmd_reward), flush=True)
                         # Break after certain # WM places
-                        if cmd_reward>=20 and vcfg['identity_group_num_0']==0:
+                        if cmd_reward>=100 and vcfg['identity_group_num_0']==0:
                             print("cumulative reward exceeded, cumulative reward: "+str(cmd_reward), flush=True)
                             pickle.dump(i, open(num_runs_save_path, "wb"))
                             
