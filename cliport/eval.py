@@ -101,10 +101,10 @@ def main(vcfg):
     # Load existing results.
     existing_results = {}
     object_infos = []
-    if os.path.exists(save_json):
-        print('Found exiting results in file: ' + str(save_json))
-        with open(save_json, 'r') as f:
-            existing_results = json.load(f)
+#     if os.path.exists(save_json):
+#         print('Found exiting results in file: ' + str(save_json))
+#         with open(save_json, 'r') as f:
+#             existing_results = json.load(f)
 
     # Load existing log.
     pickle_path = save_json+f"_{id_exp_name}"+".p"
@@ -204,6 +204,8 @@ def main(vcfg):
                         num_command_strs = len(task.command_strs)
                         if num_command_strs:
                             task.lang_template = task.command_strs[j]
+                        if vcfg['eval_task']=="packing-unseen-google-objects-race-seq-pairwise":
+                            task.lang_template = current_command_string
     
                         # env.seed(np.random.randint(2**32-1))
                         env.seed(seed)
@@ -240,6 +242,9 @@ def main(vcfg):
                                 object_infos.append(object_info)
                             else:
                                 print("pose not in info", info, flush=True)
+                                object_info.append(task.object_log_info[obj_id])
+                                object_info.append({})
+                                object_info.append({6:0})
                                 obs, reward, done, info = env.step(act)
     
                             total_reward += reward
@@ -251,7 +256,7 @@ def main(vcfg):
                         if i%250==0:
                             df = pd.DataFrame(data=object_infos)
                             df.to_csv(csv_path)
-                            pickle.dump((object_infos, cmd_reward), pickle_path)
+                            pickle.dump((object_infos, cmd_reward), open(pickle_path, "wb"))
     
                         results.append((total_reward, info))
                         mean_reward = np.mean([r for r, i in results])
@@ -264,13 +269,13 @@ def main(vcfg):
                         
                         print("cumulative reward: "+str(cmd_reward), flush=True)
                         # Break after certain # WM places
-                        if cmd_reward>=100 and vcfg['identity_group_num_0']==0:
+                        if cmd_reward>=20 and vcfg['identity_group_num_0']==0:
                             print("cumulative reward exceeded, cumulative reward: "+str(cmd_reward), flush=True)
                             pickle.dump(i, open(num_runs_save_path, "wb"))
                             
                             df = pd.DataFrame(data=object_infos)
                             df.to_csv(csv_path)
-                            pickle.dump((object_infos, cmd_reward), pickle_path)
+                            pickle.dump((object_infos, cmd_reward), open(pickle_path, "wb"))
                             
                             break
                     except Exception as e:
@@ -284,7 +289,7 @@ def main(vcfg):
 
             df = pd.DataFrame(data=object_infos)
             df.to_csv(csv_path)
-            pickle.dump((object_infos, cmd_reward), pickle_path)
+            pickle.dump((object_infos, cmd_reward), open(pickle_path, "wb"))
         # Save results in a json file.
         if vcfg['save_results']:
 
