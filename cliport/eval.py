@@ -165,8 +165,9 @@ def main(vcfg):
             for j in trange(command_string_min, command_string_max):
                 cmd_reward=0
                 num_runs_save_path=wm_save_json+str(j)+".p"
-                if vcfg['identity_group_num_0']!=0:
+                if vcfg['eval_task']=="packing-unseen-google-objects-race-seq-pairwise" and vcfg['identity_group_num_0']!=0:
                     n_demos=pickle.load(open(num_runs_save_path, "rb"))
+                    n_demos=min(n_demos, 2500)
                 print(f"running for {n_demos} trials", flush=True)
                 for i in trange(0, n_demos):
                     try:
