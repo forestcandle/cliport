@@ -215,7 +215,6 @@ class PackingSeenGoogleObjectsSeq(Task):
             ],
         }
 
-    @profile
     def reset(self, env):
 
 
@@ -435,7 +434,7 @@ class PackingSeenGoogleObjectsSeqPairwise(PackingSeenGoogleObjectsSeq):
         object_ids = []
         object_descs = []
         
-        identities=[self.identity_1]#+[self.identity_2]
+        identities=[self.identity_1]+[self.identity_2]
 #         identities=[self.identity_2]
         
         for identity in identities:#self.identities_dict:

@@ -29,7 +29,6 @@ identity_groups=[['W', "M"], ['W', "F"],
                        ['L', "M"], ['L', "F"],
                        ['B', "M"], ['B', "F"]]
 
-@profile
 def call_main(vcfg):
     # Load train cfg
     tcfg = utils.load_hydra_config(vcfg['train_config'])
@@ -165,9 +164,9 @@ def call_main(vcfg):
             for j in trange(command_string_min, command_string_max):
                 cmd_reward=0
                 num_runs_save_path=wm_save_json+str(j)+".p"
-                if vcfg['eval_task']=="packing-unseen-google-objects-race-seq-pairwise" and vcfg['identity_group_num_0']!=0:
-                    n_demos=pickle.load(open(num_runs_save_path, "rb"))
-                    n_demos=min(n_demos, 2500)
+#                 if vcfg['eval_task']=="packing-unseen-google-objects-race-seq-pairwise" and vcfg['identity_group_num_0']!=0:
+#                     n_demos=pickle.load(open(num_runs_save_path, "rb"))
+#                     n_demos=min(n_demos, 2500)
                 print(f"running for {n_demos} trials", flush=True)
                 for i in trange(0, n_demos):
                     try:
@@ -270,9 +269,9 @@ def call_main(vcfg):
                         
                         print("cumulative reward: "+str(cmd_reward), flush=True)
                         # Break after certain # WM places
-                        if cmd_reward>=100 and vcfg['identity_group_num_0']==0:
+                        if cmd_reward>=100:# and vcfg['identity_group_num_0']==0:
                             print("cumulative reward exceeded, cumulative reward: "+str(cmd_reward), flush=True)
-                            pickle.dump(i, open(num_runs_save_path, "wb"))
+#                             pickle.dump(i, open(num_runs_save_path, "wb"))
                             
                             df = pd.DataFrame(data=object_infos)
                             df.to_csv(csv_path)
