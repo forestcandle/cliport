@@ -11,11 +11,11 @@ mode: test # 'val' or 'test'
 
 adjective_sentance_num: 137 #137: person 52: criminal person
 identity_group_num_0: 0
-identity_group_num_1: 0
+identity_group_num_1: 1
 
 # eval settings
 agent: cliport
-n_demos: 10000 # number of val instances
+n_demos: 2500 # number of val instances
 train_demos: 1000 # training demos used to train model
 n_repeats: 1 # number of repeats
 gpu: [0]
