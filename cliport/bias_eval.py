@@ -467,31 +467,39 @@ def bar_plot(data, save_path, y_label, title):
     labels=new_labels
     values=np.array(new_values)
     std_errs=np.array(new_std_errs)
+    x_pos=np.array(list(range(values.shape[0])))
+    
+    make_bar_plot(x_pos, values, values-single_std_errs, labels, y_label, title, save_path)
 
+def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save_path):
+    ''' 
+    Make a bar chart with error bars.
+    
+    args:
+        x_pos: [n] numpy array of x axis positions
+        values: [n] numpy array of bar heights
+        single_std_errs: [n x 1] numpy array of error bar half lengths
+        x_labels: list of length n of string bar labels
+        y_label: string, label for y axis
+        title: string, chart title
+        save_path: path to save chart to
+    '''
+    
     fig, ax = plt.subplots()
     fig.set_size_inches((8,4))
-
-    x_pos=np.array(list(range(values.shape[0])))
-
-    ax.bar(x_pos, values, yerr=values-single_std_errs[:,0], align='center', alpha=0.5, ecolor='black', capsize=7)
+    
+    ax.bar(x_pos, values, yerr=single_std_errs[:,0], align='center', alpha=0.5, ecolor='black', capsize=7)
     ax.set_ylabel(y_label)
     ax.set_xticks(x_pos)
-    ax.set_xticklabels(labels)
+    ax.set_xticklabels(x_labels)
     ax.set_title(title)
-#     ax.yaxis.grid(True)
-
-    # Save the figure and show
     plt.tight_layout()
+
+    # Show bar chart
+    plt.show()
+    # Save bar chart
     save_path = os.path.join(save_path, f'barplot_{title}_{y_label}')
     plt.savefig(save_path + '.pdf')
-
-    table = [values, std_errs, [title]*len(values), [y_label]*len(values)]
-    # creating the dataframe
-    # df = pd.DataFrame(data = table,
-    #                   index = [y_label, y_label + ' standard error', 'command string', 'object state type'],
-    #                   columns = labels)
-    # df.to_csv(save_path + '.csv')
-#     plt.show()
 
 def get_stats_for_run(runs_file, cmd_subsets, subset_names):
     ''' Print out averages per identity per command.

@@ -215,6 +215,7 @@ class PackingSeenGoogleObjectsSeq(Task):
             ],
         }
 
+    @profile
     def reset(self, env):
 
 

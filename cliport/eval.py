@@ -29,8 +29,8 @@ identity_groups=[['W', "M"], ['W', "F"],
                        ['L', "M"], ['L', "F"],
                        ['B', "M"], ['B', "F"]]
 
-@hydra.main(config_path='./cfg', config_name='eval')
-def main(vcfg):
+@profile
+def call_main(vcfg):
     # Load train cfg
     tcfg = utils.load_hydra_config(vcfg['train_config'])
     # options, args = parser.parse_args()
@@ -359,6 +359,9 @@ def list_ckpts_to_eval(vcfg, existing_results):
 
     return ckpts_to_eval
 
+@hydra.main(config_path='./cfg', config_name='eval')
+def main(vcfg):
+    call_main(vcfg)
 
 if __name__ == '__main__':
     main()
