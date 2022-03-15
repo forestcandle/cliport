@@ -6,7 +6,6 @@ from optparse import OptionParser
 import scipy.stats as st
 import scipy.spatial
 import matplotlib as mpl
-mpl.use('Agg')
 import matplotlib.pyplot as plt
 from scipy.stats import f_oneway
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
@@ -22,6 +21,7 @@ from statsmodels.compat.python import lzip, lrange
 from tqdm import tqdm, trange
 import statsmodels.formula.api as smf
 import statsmodels.stats.api as sms
+import seaborn as sns
 
 ordered_ids=['AF', 'AM', 'BF', 'BM', 'LF', 'LM', 'WF', 'WM', 'A', 'B', 'L', 'W', 'F', 'M']
 
@@ -278,11 +278,11 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
             ax1.errorbar(means, lrange(len(means)), xerr=errs,
                          marker='o', linestyle='None', color='k', ecolor='k')
         else:
-            if comparison_name not in self.groupsunique:
+            if comparison_name not in tukey_hsd_results.groupsunique:
                 raise ValueError('comparison_name not found in group names.')
             midx = np.where(self.groupsunique==comparison_name)[0][0]
             for i in range(len(means)):
-                if self.groupsunique[i] == comparison_name:
+                if tukey_hsd_results.groupsunique[i] == comparison_name:
                     continue
                 if (min(maxrange[i], maxrange[midx]) -
                                          max(minrange[i], minrange[midx]) < 0):
@@ -290,23 +290,23 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
                 else:
                     nsigidx.append(i)
             #Plot the main comparison
-            ax1.errorbar(means[midx], midx, xerr=self.halfwidths[midx] if error_bars else 0,
+            ax1.errorbar(means[midx], midx, xerr=tukey_hsd_results.halfwidths[midx] if error_bars else 0,
                          marker='o', linestyle='None', color='b', ecolor='b')
             ax1.annotate(midx, means[midx])
             if not error_bars:
-                ax1.plot([minrange[midx]]*2, [-1, self._multicomp.ngroups],
+                ax1.plot([minrange[midx]]*2, [-1, tukey_hsd_results._multicomp.ngroups],
                         linestyle='--', color='0.7')
-                ax1.plot([maxrange[midx]]*2, [-1, self._multicomp.ngroups],
+                ax1.plot([maxrange[midx]]*2, [-1, tukey_hsd_results._multicomp.ngroups],
                         linestyle='--', color='0.7')
             #Plot those that are significantly different
             if len(sigidx) > 0:
                 ax1.errorbar(means[sigidx], sigidx,
-                             xerr=self.halfwidths[sigidx] if error_bars else 0, marker='o',
+                             xerr=tukey_hsd_results.halfwidths[sigidx] if error_bars else 0, marker='o',
                              linestyle='None', color='r', ecolor='r')
             #Plot those that are not significantly different
             if len(nsigidx) > 0:
                 ax1.errorbar(means[nsigidx], nsigidx,
-                             xerr=self.halfwidths[nsigidx] if error_bars else 0, marker='o',
+                             xerr=tukey_hsd_results.halfwidths[nsigidx] if error_bars else 0, marker='o',
                              linestyle='None', color='0.5', ecolor='0.5')
 
         ax1.set_title(title_string)
@@ -405,8 +405,12 @@ def bar_plot(data, save_path, y_label, title):
 
     # https://en.wikipedia.org/wiki/Bonferroni_correction
     single_bonferroni_corrected_p=1-mp/len(datas)
-    #pairwise_bonferroni_corrected_p=1-mp/((len(datas)*(len(datas)-1))/2.0)
-
+    # pairwise_bonferroni_corrected_p=1-mp/((len(datas)*(len(datas)-1))/2.0)
+    # swarm_frames = pd.DataFrame(data=data)
+    ##  ax = sns.swarmplot(x="Identity", y=y_label, data=swarm_frames, color="white", edgecolor="gray")
+    # ax = sns.swarmplot(y=y_label, data=swarm_frames, color="white", edgecolor="gray")
+    # swarm_save_path = os.path.join(save_path, f'swarmplot_{title}_{y_label}')
+    # plt.savefig(swarm_save_path + '.pdf')
     single_std_errs=[]
     pairwise_std_errs=np.zeros((len(datas), len(datas)))
     values=[]
@@ -468,13 +472,13 @@ def bar_plot(data, save_path, y_label, title):
     values=np.array(new_values)
     std_errs=np.array(new_std_errs)
     x_pos=np.array(list(range(values.shape[0])))
-    
+
     make_bar_plot(x_pos, values, values-single_std_errs, labels, y_label, title, save_path)
 
 def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save_path):
-    ''' 
+    '''
     Make a bar chart with error bars.
-    
+
     args:
         x_pos: [n] numpy array of x axis positions
         values: [n] numpy array of bar heights
@@ -484,10 +488,10 @@ def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save
         title: string, chart title
         save_path: path to save chart to
     '''
-    
+
     fig, ax = plt.subplots()
     fig.set_size_inches((8,4))
-    
+
     ax.bar(x_pos, values, yerr=single_std_errs[:,0], align='center', alpha=0.5, ecolor='black', capsize=7)
     ax.set_ylabel(y_label)
     ax.set_xticks(x_pos)
@@ -801,12 +805,14 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
 
 
 if __name__ == '__main__':
+    mpl.use('Agg')
+    sns.set_theme(style="whitegrid")
     parser = OptionParser()
     # parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-20-pairwise-checkpoints-cfd/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-67-strings-2022-01-21-pairwise/checkpoints")
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/single_runs/")
+    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/checkpoints/")
 
     options, args = parser.parse_args()
     print(options)
