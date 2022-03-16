@@ -475,7 +475,7 @@ def bar_plot(data, save_path, y_label, title, x_axis_label='Identity'):
 
     make_bar_plot(x_pos, values, values-single_std_errs, labels, y_label, title, save_path, x_axis_label=x_axis_label)
 
-def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save_path, x_axis_label=''):
+def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save_path, x_axis_label='', percentage=True):
     '''
     Make a bar chart with error bars.
 
@@ -488,6 +488,9 @@ def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save
         title: string, chart title
         save_path: path to save chart to
     '''
+    if percentage:
+        values *= 100
+        single_std_errs *= 100
     xpos_1d = np.squeeze(x_pos).astype(int)
     ordered_std_err_1d = np.squeeze(single_std_errs)[xpos_1d]
     ordered_values = values[xpos_1d]
@@ -546,8 +549,9 @@ def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save
     y_difflabel = y_label + ' difference'
     x_difflabel = x_axis_label + ' difference'
     diffdf = pd.DataFrame({x_axis_label: diffnames, y_difflabel: diffs, 'Significant': significants}).sort_values(y_difflabel)
-    ax = sns.catplot(data=diffdf, kind="bar", x=x_axis_label, y=y_difflabel, hue="Significant")
-    plt.xticks(rotation=45)
+    ax = sns.catplot(data=diffdf, kind="bar", x=x_axis_label, y=y_difflabel)
+    # ax = sns.catplot(data=diffdf, kind="bar", x=x_axis_label, y=y_difflabel, hue="Significant")
+    plt.xticks(rotation=90)
     plt.savefig(save_path + '_diff.pdf')
     diffdf.to_csv(save_path + '_diff.csv')
     # plt.show()
