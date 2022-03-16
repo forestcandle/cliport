@@ -516,11 +516,41 @@ def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save
     plt.tight_layout()
 
     # Show bar chart
-    plt.show()
+    # plt.show()
     # Save bar chart
     save_path = os.path.join(save_path, f'barplot_{title}_{y_label}')
     plt.savefig(save_path + '.pdf')
     plotdf.to_csv(save_path + '.csv')
+
+    # Now plot the sorted differences
+    # print('----------------------')
+    plt.clf()
+    diffs = []
+    diffnames = []
+    significants = []
+    for i, x_label1 in enumerate(ordered_columns):
+        for j, x_label2 in enumerate(ordered_columns):
+            if j > 0 and i != j:
+                diff = ordered_values[i] - ordered_values[j]
+                l1 = x_label1
+                l2 = x_label2
+                if diff > 0:
+                    l2 = x_label1
+                    l1 = x_label2
+                diffname = l1 + ' - ' + l2
+                significant = diff > ((ordered_std_err_1d[i] + ordered_std_err_1d[j])/2.0)
+                negdiff = -np.abs(diff)
+                diffnames += [diffname]
+                diffs += [negdiff]
+                significants += [significant]
+    y_difflabel = y_label + ' difference'
+    x_difflabel = x_axis_label + ' difference'
+    diffdf = pd.DataFrame({x_axis_label: diffnames, y_difflabel: diffs, 'Significant': significants}).sort_values(y_difflabel)
+    ax = sns.catplot(data=diffdf, kind="bar", x=x_axis_label, y=y_difflabel, hue="Significant")
+    plt.xticks(rotation=45)
+    plt.savefig(save_path + '_diff.pdf')
+    diffdf.to_csv(save_path + '_diff.csv')
+    # plt.show()
 
 
 def get_stats_for_run(runs_file, cmd_subsets, subset_names):
