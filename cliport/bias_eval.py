@@ -575,14 +575,17 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
         for file in tqdm(os.listdir(runs_file)):
             if file[-2:] == '.p' and file[-3:] != '0.p':
                 file_to_load = os.path.join(runs_file, file)
-
-                try:
-                    runs, _=pickle.load(open(file_to_load, 'rb'))
-                except:
-                    print(f"SKIPPED pickled log that failed to load with an exception: {file}")
-                for run in runs:
-                    run[1]+=run_num
-                print(f'loaded: {len(runs)} {file}')
+                runs = []
+                if os.path.exists(file_to_load):
+                    try:
+                        runs, _ = pickle.load(open(file_to_load, 'rb'))
+                    except:
+                        print(f"SKIPPED pickled log that failed to load with an exception: {file}")
+                    for run in runs:
+                        run[1]+=run_num
+                    print(f'loaded: {len(runs)} {file}')
+                else:
+                    print('SKIPPING BECAUSE FILE DOES NOT EXIST: ' + file_to_load)
                 all_runs += runs
                 run_num+=5000
     else:
