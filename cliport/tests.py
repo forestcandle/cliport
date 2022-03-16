@@ -16,7 +16,7 @@ def test_bar_plot():
     save_path="~/Downloads/"
     save_path = os.path.expanduser(save_path)
 
-    bias_eval.make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save_path)
+    bias_eval.make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save_path, x_axis_label='Identity')
 
 if __name__ == '__main__':
     test_bar_plot()

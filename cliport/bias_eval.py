@@ -389,7 +389,7 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
 #         return fig, tukey_hsd_results
 
 
-def bar_plot(data, save_path, y_label, title):
+def bar_plot(data, save_path, y_label, title, x_axis_label='Identity'):
     p=0.95
     mp=1-p
 
@@ -473,9 +473,9 @@ def bar_plot(data, save_path, y_label, title):
     std_errs=np.array(new_std_errs)
     x_pos=np.array(list(range(values.shape[0])))
 
-    make_bar_plot(x_pos, values, values-single_std_errs, labels, y_label, title, save_path)
+    make_bar_plot(x_pos, values, values-single_std_errs, labels, y_label, title, save_path, x_axis_label=x_axis_label)
 
-def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save_path):
+def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save_path, x_axis_label=''):
     '''
     Make a bar chart with error bars.
 
@@ -488,15 +488,31 @@ def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save
         title: string, chart title
         save_path: path to save chart to
     '''
+    xpos_1d = np.squeeze(x_pos).astype(int)
+    ordered_std_err_1d = np.squeeze(single_std_errs)[xpos_1d]
+    ordered_values = values[xpos_1d]
+    ordered_columns = np.array(x_labels)[xpos_1d]
+    # plotdf = pd.DataFrame(ordered_table, columns=ordered_index, index=ordered_columns)
+    plotdf = pd.DataFrame({x_axis_label: ordered_columns, y_label: ordered_values, 'std_err': ordered_std_err_1d})
+    ax = sns.catplot(data=plotdf, kind="bar", x=x_axis_label, y=y_label, yerr=ordered_std_err_1d)
+    # print(plotdf)
+    ## barplot approach (works)
+    # ordered_table = np.array([ordered_columns, ordered_values, ordered_std_err_1d]).transpose()
+    # ordered_index = ['Identity', y_label, 'std_err']
+    # ax = sns.barplot(x=ordered_columns, y=ordered_values, yerr=ordered_std_err_1d)
+    # for container in ax.containers:
+    #     # add value labels to bars
+    #     if hasattr(container, 'patches'):
+    #         ax.bar_label(container)
+    ## Original approach
+    # fig, ax = plt.subplots()
+    # fig.set_size_inches((8,4))
 
-    fig, ax = plt.subplots()
-    fig.set_size_inches((8,4))
-
-    ax.bar(x_pos, values, yerr=single_std_errs[:,0], align='center', alpha=0.5, ecolor='black', capsize=7)
-    ax.set_ylabel(y_label)
-    ax.set_xticks(x_pos)
-    ax.set_xticklabels(x_labels)
-    ax.set_title(title)
+    # ax.bar(x_pos, values, yerr=single_std_errs[:,0], align='center', alpha=0.5, ecolor='black', capsize=7)
+    # ax.set_ylabel(y_label)
+    # ax.set_xticks(x_pos)
+    # ax.set_xticklabels(x_labels)
+    # ax.set_title(title)
     plt.tight_layout()
 
     # Show bar chart
@@ -504,6 +520,8 @@ def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save
     # Save bar chart
     save_path = os.path.join(save_path, f'barplot_{title}_{y_label}')
     plt.savefig(save_path + '.pdf')
+    plotdf.to_csv(save_path + '.csv')
+
 
 def get_stats_for_run(runs_file, cmd_subsets, subset_names):
     ''' Print out averages per identity per command.
