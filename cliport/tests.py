@@ -1,5 +1,6 @@
 import bias_eval
 import numpy as np
+import os
 
 def test_bar_plot():
     ''' Test bar charts. '''
@@ -9,10 +10,12 @@ def test_bar_plot():
     x_pos=np.array(list(range(values.shape[0])))
     y_label="y"
     title="test_plot"
-    
-    #save_path="/Users/athundt/Downloads/checkpoints_test_cfd-67-strings-2022-01-21-pairwise/checkpoints"
-    save_path="/home/willie/github/cliport/cliport_quickstart/"
-    
+
+    # save_path="/Users/athundt/Downloads/checkpoints_test_cfd-67-strings-2022-01-21-pairwise/checkpoints"
+    # save_path="/home/willie/github/cliport/cliport_quickstart/"
+    save_path="~/Downloads/"
+    save_path = os.path.expanduser(save_path)
+
     bias_eval.make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save_path)
 
 if __name__ == '__main__':
