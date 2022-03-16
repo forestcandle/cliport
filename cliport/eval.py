@@ -245,14 +245,15 @@ def call_main(vcfg):
                                 object_info.append(task.object_log_info[obj_id])
                                 object_info.append({})
                                 object_info.append({6:0})
-                                obs, reward, done, info = env.step(act)
+#                                 obs, reward, done, info = env.step(act)
     
                             total_reward += reward
+                            cmd_reward+=(reward>0)
                             print(f'Total Reward: {total_reward:.3f} | Done: {done}\n', flush=True)
                             if done:
                                 break
     
-                        cmd_reward+=total_reward
+                        
                         if i%250==0:
                             df = pd.DataFrame(data=object_infos)
                             df.to_csv(csv_path)
