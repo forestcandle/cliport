@@ -389,7 +389,7 @@ def tukey_plot_simultaneous(tukey_hsd_results, comparison_name=None, ax=None, fi
 #         return fig, tukey_hsd_results
 
 
-def bar_plot(data, save_path, y_label, title):
+def bar_plot(data, save_path, y_label, title, x_axis_label='Identity'):
     p=0.95
     mp=1-p
 
@@ -475,7 +475,7 @@ def bar_plot(data, save_path, y_label, title):
 
     make_bar_plot(x_pos, values, values[:,None]-single_std_errs, labels, y_label, title, save_path)
 
-def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save_path):
+def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save_path, x_axis_label='', percentage=True):
     '''
     Make a bar chart with error bars.
 
@@ -488,22 +488,74 @@ def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save
         title: string, chart title
         save_path: path to save chart to
     '''
+    if percentage:
+        values *= 100
+        single_std_errs *= 100
+    xpos_1d = np.squeeze(x_pos).astype(int)
+    ordered_std_err_1d = np.squeeze(single_std_errs)[xpos_1d]
+    ordered_values = values[xpos_1d]
+    ordered_columns = np.array(x_labels)[xpos_1d]
+    # plotdf = pd.DataFrame(ordered_table, columns=ordered_index, index=ordered_columns)
+    plotdf = pd.DataFrame({x_axis_label: ordered_columns, y_label: ordered_values, 'std_err': ordered_std_err_1d})
+    ax = sns.catplot(data=plotdf, kind="bar", x=x_axis_label, y=y_label, yerr=ordered_std_err_1d)
+    # print(plotdf)
+    ## barplot approach (works)
+    # ordered_table = np.array([ordered_columns, ordered_values, ordered_std_err_1d]).transpose()
+    # ordered_index = ['Identity', y_label, 'std_err']
+    # ax = sns.barplot(x=ordered_columns, y=ordered_values, yerr=ordered_std_err_1d)
+    # for container in ax.containers:
+    #     # add value labels to bars
+    #     if hasattr(container, 'patches'):
+    #         ax.bar_label(container)
+    ## Original approach
+    # fig, ax = plt.subplots()
+    # fig.set_size_inches((8,4))
 
-    fig, ax = plt.subplots()
-    fig.set_size_inches((8,4))
-
-    ax.bar(x_pos, values, yerr=single_std_errs[:,0], align='center', alpha=0.5, ecolor='black', capsize=7)
-    ax.set_ylabel(y_label)
-    ax.set_xticks(x_pos)
-    ax.set_xticklabels(x_labels)
-    ax.set_title(title)
+    # ax.bar(x_pos, values, yerr=single_std_errs[:,0], align='center', alpha=0.5, ecolor='black', capsize=7)
+    # ax.set_ylabel(y_label)
+    # ax.set_xticks(x_pos)
+    # ax.set_xticklabels(x_labels)
+    # ax.set_title(title)
     plt.tight_layout()
 
     # Show bar chart
-    plt.show()
+    # plt.show()
     # Save bar chart
     save_path = os.path.join(save_path, f'barplot_{title}_{y_label}')
     plt.savefig(save_path + '.pdf')
+    plotdf.to_csv(save_path + '.csv')
+
+    # Now plot the sorted differences
+    # print('----------------------')
+    plt.clf()
+    diffs = []
+    diffnames = []
+    significants = []
+    for i, x_label1 in enumerate(ordered_columns):
+        for j, x_label2 in enumerate(ordered_columns):
+            if j > 0 and i != j:
+                diff = ordered_values[i] - ordered_values[j]
+                l1 = x_label1
+                l2 = x_label2
+                if diff > 0:
+                    l2 = x_label1
+                    l1 = x_label2
+                diffname = l1 + ' - ' + l2
+                significant = diff > ((ordered_std_err_1d[i] + ordered_std_err_1d[j])/2.0)
+                negdiff = -np.abs(diff)
+                diffnames += [diffname]
+                diffs += [negdiff]
+                significants += [significant]
+    y_difflabel = y_label + ' difference'
+    x_difflabel = x_axis_label + ' difference'
+    diffdf = pd.DataFrame({x_axis_label: diffnames, y_difflabel: diffs, 'Significant': significants}).sort_values(y_difflabel)
+    ax = sns.catplot(data=diffdf, kind="bar", x=x_axis_label, y=y_difflabel)
+    # ax = sns.catplot(data=diffdf, kind="bar", x=x_axis_label, y=y_difflabel, hue="Significant")
+    plt.xticks(rotation=90)
+    plt.savefig(save_path + '_diff.pdf')
+    diffdf.to_csv(save_path + '_diff.csv')
+    # plt.show()
+
 
 def get_stats_for_run(runs_file, cmd_subsets, subset_names):
     ''' Print out averages per identity per command.
@@ -523,14 +575,20 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
         for file in tqdm(os.listdir(runs_file)):
             if file[-2:] == '.p' and file[-3:] != '0.p':
                 file_to_load = os.path.join(runs_file, file)
-
-                try:
-                    runs=pickle.load(open(file_to_load, 'rb'))
-                except:
-                    print(f"SKIPPED pickled log that failed to load with an exception: {file}")
-                for run in runs:
-                    run[1]+=run_num
-                print(f'loaded: {len(runs)} {file}')
+                runs = []
+                if os.path.exists(file_to_load):
+                    try:
+                        runs = pickle.load(open(file_to_load, 'rb'))
+                        # Backward compatability with old save format
+                        if len(runs)==2:
+                            runs = runs[0]
+                    except:
+                        print(f"SKIPPED pickled log that failed to load with an exception: {file}")
+                    for run in runs:
+                        run[1]+=run_num
+                    print(f'loaded: {len(runs)} {file}')
+                else:
+                    print('SKIPPING BECAUSE FILE DOES NOT EXIST: ' + file_to_load)
                 all_runs += runs
                 run_num+=5000
     else:
