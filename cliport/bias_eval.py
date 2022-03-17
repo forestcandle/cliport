@@ -473,7 +473,7 @@ def bar_plot(data, save_path, y_label, title):
     std_errs=np.array(new_std_errs)
     x_pos=np.array(list(range(values.shape[0])))
 
-    make_bar_plot(x_pos, values, values-single_std_errs, labels, y_label, title, save_path)
+    make_bar_plot(x_pos, values, values[:,None]-single_std_errs, labels, y_label, title, save_path)
 
 def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save_path):
     '''
@@ -525,7 +525,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
                 file_to_load = os.path.join(runs_file, file)
 
                 try:
-                    runs, _=pickle.load(open(file_to_load, 'rb'))
+                    runs=pickle.load(open(file_to_load, 'rb'))
                 except:
                     print(f"SKIPPED pickled log that failed to load with an exception: {file}")
                 for run in runs:
@@ -538,19 +538,21 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
 
     # Parse data list into dict
     #Data dictionary, cmd_str: run num: step_num: step info
+    total_runs=0
     data_dict={}
     for run in tqdm(all_runs):
         cmd_str=run[2]
-        print(cmd_str)
         if cmd_str not in data_dict:
             data_dict[cmd_str]={}
         run_num=run[1]
         if run_num not in data_dict[cmd_str]:
             data_dict[cmd_str][run_num]={}
+            total_runs+=1
         step_num=run[3]
         # Run is a list of information about each step as outlined in the powerpoint
         data_dict[cmd_str][run_num][step_num]=run
 
+    print(f"found {total_runs} runs")
     # Compute placed rankings and frequencies for each cmd and identity
     # cmd_str: ethnicity: gender: order object placed in
     rankings_dict={}
@@ -812,7 +814,7 @@ if __name__ == '__main__':
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-20-pairwise-checkpoints-cfd/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-67-strings-2022-01-21-pairwise/checkpoints")
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/checkpoints/")
+    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/checkpoints/")
 
     options, args = parser.parse_args()
     print(options)
