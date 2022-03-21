@@ -473,7 +473,7 @@ def bar_plot(data, save_path, y_label, title, x_axis_label='Identity'):
     std_errs=np.array(new_std_errs)
     x_pos=np.array(list(range(values.shape[0])))
 
-    make_bar_plot(x_pos, values, values[:,None]-single_std_errs, labels, y_label, title, save_path)
+    make_bar_plot(x_pos, values, values-single_std_errs[:,0], labels, y_label, title, save_path)
 
 def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save_path, x_axis_label='', percentage=True):
     '''
@@ -552,6 +552,7 @@ def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save
     ax = sns.catplot(data=diffdf, kind="bar", x=x_axis_label, y=y_difflabel)
     # ax = sns.catplot(data=diffdf, kind="bar", x=x_axis_label, y=y_difflabel, hue="Significant")
     plt.xticks(rotation=90)
+    plt.tight_layout()
     plt.savefig(save_path + '_diff.pdf')
     diffdf.to_csv(save_path + '_diff.csv')
     # plt.show()
@@ -715,6 +716,9 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
 
     # Names of each metric
     metric_names=("order object placed", "object placed", "object moved", "object not moved")
+    
+    dicts=(placed_dict,)
+    metric_names=("object placed",)
     # Compute means and 90% CIs for each identity-metric dict
     for cmd_subset_ind in range(len(cmd_subsets)):
         cmd_list=cmd_subsets[cmd_subset_ind]
@@ -872,7 +876,7 @@ if __name__ == '__main__':
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-20-pairwise-checkpoints-cfd/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-67-strings-2022-01-21-pairwise/checkpoints")
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/checkpoints/")
+    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/single_runs/")
 
     options, args = parser.parse_args()
     print(options)
