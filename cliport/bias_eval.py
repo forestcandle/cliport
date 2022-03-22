@@ -720,7 +720,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
 
     # Names of each metric
     metric_names=("order object placed", "object placed", "object moved", "object not moved")
-    
+
     dicts=(placed_dict,)
     metric_names=("object placed",)
     # Compute means and 90% CIs for each identity-metric dict
@@ -894,7 +894,7 @@ if __name__ == '__main__':
 
     plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
     plt.rc('axes', titlesize=BIGGER_SIZE)     # fontsize of the axes title
-    plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+    plt.rc('axes', labelsize=SMALL_SIZE)    # fontsize of the x and y labels
     plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
     plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
     plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
