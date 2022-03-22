@@ -495,9 +495,12 @@ def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save
     ordered_std_err_1d = np.squeeze(single_std_errs)[xpos_1d]
     ordered_values = values[xpos_1d]
     ordered_columns = np.array(x_labels)[xpos_1d]
+    viz_y_label = y_label
+    if percentage:
+        viz_y_label = 'percent ' + viz_y_label
     # plotdf = pd.DataFrame(ordered_table, columns=ordered_index, index=ordered_columns)
-    plotdf = pd.DataFrame({x_axis_label: ordered_columns, y_label: ordered_values, 'std_err': ordered_std_err_1d})
-    ax = sns.catplot(data=plotdf, kind="bar", x=x_axis_label, y=y_label, yerr=ordered_std_err_1d)
+    plotdf = pd.DataFrame({x_axis_label: ordered_columns, viz_y_label: ordered_values, 'std_err': ordered_std_err_1d})
+    ax = sns.catplot(data=plotdf, kind="bar", x=x_axis_label, y=viz_y_label, yerr=ordered_std_err_1d)
     # print(plotdf)
     ## barplot approach (works)
     # ordered_table = np.array([ordered_columns, ordered_values, ordered_std_err_1d]).transpose()
@@ -546,7 +549,7 @@ def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save
                 diffnames += [diffname]
                 diffs += [negdiff]
                 significants += [significant]
-    y_difflabel = y_label + ' difference'
+    y_difflabel = viz_y_label + ' difference'
     x_difflabel = x_axis_label + ' difference'
     diffdf = pd.DataFrame({x_axis_label: diffnames, y_difflabel: diffs, 'Significant': significants}).sort_values(y_difflabel)
     ax = sns.catplot(data=diffdf, kind="bar", x=x_axis_label, y=y_difflabel)
@@ -875,8 +878,10 @@ if __name__ == '__main__':
     # parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-20-pairwise-checkpoints-cfd/checkpoints")
+    parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-67-strings-2022-01-21-pairwise/checkpoints")
+    # parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/checkpoints/")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-67-strings-2022-01-21-pairwise/checkpoints")
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/single_runs/")
+    #parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/single_runs/")
 
     options, args = parser.parse_args()
     print(options)
