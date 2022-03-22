@@ -544,6 +544,7 @@ def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save
                     l2 = x_label1
                     l1 = x_label2
                 diffname = l1 + ' - ' + l2
+                # TODO(ahundt) WARNING: THESE ARE PLACEHOLDER SIGNIFICANCE VALUES, NEED REAL CORRECTED TRUE/FALSE VERSION AND STD ERR
                 significant = diff > ((ordered_std_err_1d[i] + ordered_std_err_1d[j])/2.0)
                 negdiff = -np.abs(diff)
                 diffnames += [diffname]
@@ -551,7 +552,7 @@ def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save
                 significants += [significant]
     y_difflabel = viz_y_label + ' difference'
     x_difflabel = x_axis_label + ' difference'
-    diffdf = pd.DataFrame({x_axis_label: diffnames, y_difflabel: diffs, 'Significant': significants}).sort_values(y_difflabel)
+    diffdf = pd.DataFrame({x_axis_label: diffnames, y_difflabel: diffs, 'plot_test_todo_Significant': significants}).sort_values(y_difflabel)
     ax = sns.catplot(data=diffdf, kind="bar", x=x_axis_label, y=y_difflabel)
     # ax = sns.catplot(data=diffdf, kind="bar", x=x_axis_label, y=y_difflabel, hue="Significant")
     plt.xticks(rotation=90)
