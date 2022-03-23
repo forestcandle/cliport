@@ -235,7 +235,6 @@ def call_main(vcfg):
 
     record = vcfg['record']['save_video']
     n_demos = int(vcfg['n_demos'])
-    n_demos=1
     # HACK TODO clean up command string iteration, re-enable other tasks
     num_command_strs = len(command_strs)
     num_id_pairs = len(list(itertools.combinations(identity_groups, 2)))
@@ -255,101 +254,58 @@ def call_main(vcfg):
         for log in object_infos:
             completed_experiments[log[0], log[-1], log[1]] = 1
 
-    parallel_runs={}
-    all_parallel_runs=[]
     cumulative_rewards={}
     # Run testing and save total rewards with last transition info.        
     for j in trange(vcfg['command_string_min'], vcfg['command_string_max']):
         cmd_reward=0
         num_runs_save_path=wm_save_json+str(j)+".p"
         print(f"running for {n_demos} trials", flush=True)
-        parallel_runs[j]={}
-        cumulative_rewards[j]={}
         for id_group_pair_ind in range(num_id_pairs):
-            parallel_runs[j][id_group_pair_ind]=[]
-            cumulative_rewards[j][id_group_pair_ind]=0
+            all_parallel_runs=[]
             for i in trange(0, n_demos):
                 k = num_id_pairs*n_demos*j+n_demos*id_group_pair_ind+i
                 episode, seed = ds.load(0)
                 seed = k
                 agent_output_queues[k]=m.Queue()
                 run=pool.apply_async(do_run, args=(seed, command_strs, completed_experiments, i, j, episode, ds, vcfg, dataset_type, mode, record, agent_queue, agent_output_queues[k], k, id_group_pair_ind))
-                parallel_runs[j][id_group_pair_ind].append(run)
                 all_parallel_runs.append(run)
-#                     run_object_infos, run_cmd_reward, total_reward, info = do_run(seed, command_strs, completed_experiments, i, j, episode, ds, vcfg, dataset_type, mode, record, agent_queue)
-#                     object_infos+=run_object_infos
-#                     cmd_reward+=run_cmd_reward
-#                     
-#                     if i%250==0:
-#                         df = pd.DataFrame(data=object_infos)
-#                         df.to_csv(csv_path)
-#                         pickle.dump((object_infos, cmd_reward), open(pickle_path, "wb"))
-# 
-#                     results.append((total_reward, info))
-#                     mean_reward = np.mean([r for r, i in results])
-#                     print(f'Mean: {mean_reward} | Task: {task_name} | Ckpt: {ckpt}', flush=True)
-# 
-#                     # End recording video
-#                     if record:
-#                         env.end_rec()
-#                     completed_experiments[j, i] = 1
-#                     
-#                     print("cumulative reward: "+str(cmd_reward), flush=True)
-#                     # Break after certain # WM places
-#                     if cmd_reward>=500:# and vcfg['identity_group_num_0']==0:
-#                         print("cumulative reward exceeded, cumulative reward: "+str(cmd_reward), flush=True)
-# #                             pickle.dump(i, open(num_runs_save_path, "wb"))
-#                         
-#                         df = pd.DataFrame(data=object_infos)
-#                         df.to_csv(csv_path)
-#                         pickle.dump((object_infos, cmd_reward), open(pickle_path, "wb"))
-#                         
-#                         break
-#             all_results[ckpt] = {
-#                 'episodes': results,
-#                 'mean_reward': mean_reward,
-#             }
-# 
-#         df = pd.DataFrame(data=object_infos)
-#         df.to_csv(csv_path)
-#         pickle.dump((object_infos, cmd_reward), open(pickle_path, "wb"))
 
-    print("start act loop")
-    all_done=False
-    total_num_runs=len(all_parallel_runs)
-    while not all_done:  
-        all_done=True
-        new_parallel_runs=[]
-        for p_ind in range(len(all_parallel_runs)):
-            p=all_parallel_runs[p_ind]
-            if p.ready():
-                res=p.get()
-                if res!=None:
-                    run_object_infos, run_cmd_reward, total_reward, info, j, id_group_pair_ind, i=res
-                    object_infos+=run_object_infos
-                    cumulative_rewards[j][id_group_pair_ind]+=run_cmd_reward
-                    results.append((total_reward, info))
-                    completed_experiments[j, id_group_pair_ind, i] = 1
-                    if len(results)%250==0:
-                        print(f"len(results) {len(results)}")
-                        df = pd.DataFrame(data=object_infos)
-                        df.to_csv(csv_path)
-                        pickle.dump((object_infos, cmd_reward, completed_experiments), open(pickle_path, "wb"))                    
-            else:
-                new_parallel_runs.append(p)
-                all_done=False
-        all_parallel_runs=new_parallel_runs
-        while True:
-            try:
-                act_inputs=agent_queue.get(timeout=0.02)
-                act = agent.act(act_inputs['obs'], act_inputs['info'], act_inputs['goal'])
-                k=act_inputs['k']
-                agent_output_queues[k].put(act)
-                print("sent act")
-                print(f"{len(all_parallel_runs)} of {total_num_runs}")
-            except Empty:
-                break
-        
+            print("start act loop")
+            all_done=False
+            total_num_runs=len(all_parallel_runs)
+            while not all_done:  
+                all_done=True
+                new_parallel_runs=[]
+                for p_ind in range(len(all_parallel_runs)):
+                    p=all_parallel_runs[p_ind]
+                    if p.ready():
+                        res=p.get()
+                        if res!=None:
+                            run_object_infos, run_cmd_reward, total_reward, info, j, id_group_pair_ind, i=res
+                            object_infos+=run_object_infos
+                            cumulative_rewards[j][id_group_pair_ind]+=run_cmd_reward
+                            results.append((total_reward, info))
+                            completed_experiments[j, id_group_pair_ind, i] = 1
+                            if len(results)%250==0:
+                                print(f"len(results) {len(results)}")
+                                df = pd.DataFrame(data=object_infos)
+                                df.to_csv(csv_path)
+                                pickle.dump((object_infos, cmd_reward, completed_experiments), open(pickle_path, "wb"))                    
+                    else:
+                        new_parallel_runs.append(p)
+                        all_done=False
+                all_parallel_runs=new_parallel_runs
+                while True:
+                    try:
+                        act_inputs=agent_queue.get(timeout=0.02)
+                        act = agent.act(act_inputs['obs'], act_inputs['info'], act_inputs['goal'])
+                        k=act_inputs['k']
+                        agent_output_queues[k].put(act)
+                        print("sent act")
+                        print(f"{len(all_parallel_runs)} of {total_num_runs}")
+                    except Empty:
+                        break
+
     df = pd.DataFrame(data=object_infos)
     df.to_csv(csv_path)
     pickle.dump((object_infos, cmd_reward, completed_experiments), open(pickle_path, "wb"))
