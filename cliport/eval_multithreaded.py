@@ -283,7 +283,7 @@ def call_main(vcfg):
                         if res!=None:
                             run_object_infos, run_cmd_reward, total_reward, info, j, id_group_pair_ind, i=res
                             object_infos+=run_object_infos
-                            cumulative_rewards[j][id_group_pair_ind]+=run_cmd_reward
+                            #cumulative_rewards[j][id_group_pair_ind]+=run_cmd_reward
                             results.append((total_reward, info))
                             completed_experiments[j, id_group_pair_ind, i] = 1
                             if len(results)%250==0:
