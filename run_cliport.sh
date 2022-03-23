@@ -3,7 +3,7 @@
 #SBATCH --partition=ckpt
 #SBATCH --account=cse
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=20
 #SBATCH --mem=96G
 #SBATCH --gres=gpu:1
 #SBATCH --time=10:00:00
