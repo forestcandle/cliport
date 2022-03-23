@@ -23,6 +23,7 @@ from tqdm import tqdm, trange
 import multiprocessing as mp
 import itertools
 from pebble import ProcessPool
+import time
 
 # parser = OptionParser()
 # # Random seed
@@ -214,6 +215,7 @@ def call_main(vcfg):
     ckpts_to_eval = list_ckpts_to_eval(vcfg, existing_results)
 
     # Set up inference server queues and thread pool
+    print(f"using {vcfg['num_processes']} threads")
     pool = mp.Pool(processes=vcfg['num_processes'], maxtasksperchild=1)
     m = mp.Manager()
     agent_queue=m.Queue()
@@ -273,6 +275,7 @@ def call_main(vcfg):
             print("start act loop")
             all_done=False
             total_num_runs=len(all_parallel_runs)
+            s_time=time.time()
             while not all_done:  
                 all_done=True
                 new_parallel_runs=[]
@@ -301,10 +304,11 @@ def call_main(vcfg):
                         act = agent.act(act_inputs['obs'], act_inputs['info'], act_inputs['goal'])
                         k=act_inputs['k']
                         agent_output_queues[k].put(act)
-                        print("sent act")
-                        print(f"{len(all_parallel_runs)} of {total_num_runs}")
                     except Empty:
                         break
+                c_time=time.time()
+                avg_per_it=(c_time-s_time)/max(total_num_runs-len(all_parallel_runs), 1)
+                print(f"{len(all_parallel_runs)} of {total_num_runs} {avg_per_it} s/it")
 
     df = pd.DataFrame(data=object_infos)
     df.to_csv(csv_path)

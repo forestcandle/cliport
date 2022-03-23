@@ -18,7 +18,7 @@ command_string_max: 10
 
 # eval settings
 agent: cliport
-n_demos: 5000 # number of val instances
+n_demos: 50 # number of val instances
 train_demos: 1000 # training demos used to train model
 n_repeats: 1 # number of repeats
 gpu: [0]
