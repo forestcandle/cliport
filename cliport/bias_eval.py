@@ -495,9 +495,12 @@ def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save
     ordered_std_err_1d = np.squeeze(single_std_errs)[xpos_1d]
     ordered_values = values[xpos_1d]
     ordered_columns = np.array(x_labels)[xpos_1d]
+    viz_y_label = y_label
+    if percentage:
+        viz_y_label = 'percent ' + viz_y_label
     # plotdf = pd.DataFrame(ordered_table, columns=ordered_index, index=ordered_columns)
-    plotdf = pd.DataFrame({x_axis_label: ordered_columns, y_label: ordered_values, 'std_err': ordered_std_err_1d})
-    ax = sns.catplot(data=plotdf, kind="bar", x=x_axis_label, y=y_label, yerr=ordered_std_err_1d)
+    plotdf = pd.DataFrame({x_axis_label: ordered_columns, viz_y_label: ordered_values, 'std_err': ordered_std_err_1d})
+    ax = sns.catplot(data=plotdf, kind="bar", x=x_axis_label, y=viz_y_label, yerr=ordered_std_err_1d)
     # print(plotdf)
     ## barplot approach (works)
     # ordered_table = np.array([ordered_columns, ordered_values, ordered_std_err_1d]).transpose()
@@ -541,14 +544,15 @@ def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save
                     l2 = x_label1
                     l1 = x_label2
                 diffname = l1 + ' - ' + l2
+                # TODO(ahundt) WARNING: THESE ARE PLACEHOLDER SIGNIFICANCE VALUES, NEED REAL CORRECTED TRUE/FALSE VERSION AND STD ERR
                 significant = diff > ((ordered_std_err_1d[i] + ordered_std_err_1d[j])/2.0)
                 negdiff = -np.abs(diff)
                 diffnames += [diffname]
                 diffs += [negdiff]
                 significants += [significant]
-    y_difflabel = y_label + ' difference'
+    y_difflabel = viz_y_label + ' difference'
     x_difflabel = x_axis_label + ' difference'
-    diffdf = pd.DataFrame({x_axis_label: diffnames, y_difflabel: diffs, 'Significant': significants}).sort_values(y_difflabel)
+    diffdf = pd.DataFrame({x_axis_label: diffnames, y_difflabel: diffs, 'plot_test_todo_Significant': significants}).sort_values(y_difflabel)
     ax = sns.catplot(data=diffdf, kind="bar", x=x_axis_label, y=y_difflabel)
     # ax = sns.catplot(data=diffdf, kind="bar", x=x_axis_label, y=y_difflabel, hue="Significant")
     plt.xticks(rotation=90)
@@ -716,7 +720,7 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
 
     # Names of each metric
     metric_names=("order object placed", "object placed", "object moved", "object not moved")
-    
+
     dicts=(placed_dict,)
     metric_names=("object placed",)
     # Compute means and 90% CIs for each identity-metric dict
@@ -875,8 +879,10 @@ if __name__ == '__main__':
     # parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-180-strings-2022-01-11-1218/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-19-pairwise-checkpoints-cfd/checkpoints")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/2022-01-20-pairwise-checkpoints-cfd/checkpoints")
+    parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-67-strings-2022-01-21-pairwise/checkpoints")
+    # parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/packing-unseen-google-objects-race-seq-cliport-n1000-train/hyak_checkpoints/checkpoints/")
     #parser.add_option("--runs_file", dest="runs_file", default="/Users/athundt/Downloads/checkpoints_test_cfd-67-strings-2022-01-21-pairwise/checkpoints")
-    parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/single_runs/")
+    #parser.add_option("--runs_file", dest="runs_file", default="/home/willie/github/cliport/cliport_quickstart/single_runs/")
 
     options, args = parser.parse_args()
     print(options)
@@ -888,7 +894,7 @@ if __name__ == '__main__':
 
     plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
     plt.rc('axes', titlesize=BIGGER_SIZE)     # fontsize of the axes title
-    plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+    plt.rc('axes', labelsize=SMALL_SIZE)    # fontsize of the x and y labels
     plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
     plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
     plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
