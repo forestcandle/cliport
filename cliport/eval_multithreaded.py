@@ -1,7 +1,7 @@
 """Ravens main training script."""
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+#os.environ["CUDA_VISIBLE_DEVICES"]="1"
 import pickle
 import json
 import logging
