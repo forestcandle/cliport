@@ -269,11 +269,12 @@ def call_main(vcfg):
             all_parallel_runs=[]
             for i in trange(0, n_demos):
                 k = num_id_pairs*n_demos*j+n_demos*id_group_pair_ind+i
-                episode, seed = ds.load(0)
-                seed = k
-                agent_output_queues[k]=m.Queue()
-                run=pool.apply_async(do_run, args=(seed, command_strs, completed_experiments, i, j, episode, ds, vcfg, dataset_type, mode, record, agent_queue, agent_output_queues[k], k, id_group_pair_ind))
-                all_parallel_runs.append(run)
+                if not completed_experiments[j, id_group_pair_ind, i]:
+                    episode, seed = ds.load(0)
+                    seed = k
+                    agent_output_queues[k]=m.Queue()
+                    run=pool.apply_async(do_run, args=(seed, command_strs, completed_experiments, i, j, episode, ds, vcfg, dataset_type, mode, record, agent_queue, agent_output_queues[k], k, id_group_pair_ind))
+                    all_parallel_runs.append(run)
 
             print("start act loop")
             all_done=False
