@@ -106,7 +106,7 @@ def do_run(seed, command_strs, completed_experiments, i, j, episode, ds, vcfg, d
         agent_queue.put(act_inputs)
         act=agent_output_queue.get()
         lang_goal = info['lang_goal']
-        print(f'Lang Goal: {lang_goal}', flush=True)
+#         print(f'Lang Goal: {lang_goal}', flush=True)
         obs, reward, done, info = env.step(act)
 
         object_info = []
@@ -122,7 +122,7 @@ def do_run(seed, command_strs, completed_experiments, i, j, episode, ds, vcfg, d
                 object_info.append(info['placed'][obj_id])
             object_infos.append(object_info)
         else:
-            print("pose not in info", info, flush=True)
+#             print("pose not in info", info, flush=True)
             object_info.append(None)
             object_info.append({})
             object_info.append({6:0})
@@ -130,7 +130,7 @@ def do_run(seed, command_strs, completed_experiments, i, j, episode, ds, vcfg, d
         object_info.append(id_group_pair_ind)
         total_reward += reward
         cmd_reward+=(reward>0)
-        print(f'Total Reward: {total_reward:.3f} | Done: {done}\n', flush=True)
+#         print(f'Total Reward: {total_reward:.3f} | Done: {done}\n', flush=True)
         if done:
             break
     
@@ -223,7 +223,7 @@ def call_main(vcfg):
 
     # Evaluation loop
     print(f"Evaluating: {str(ckpts_to_eval)}")
-    model_file = os.path.join(vcfg['model_path'], ckpts_to_eval[0])
+   ? model_file = os.path.join(vcfg['model_path'], ckpts_to_eval[0])
 
     results = []
     mean_reward = 0.0
@@ -304,11 +304,12 @@ def call_main(vcfg):
                         act = agent.act(act_inputs['obs'], act_inputs['info'], act_inputs['goal'])
                         k=act_inputs['k']
                         agent_output_queues[k].put(act)
+                        print(f"{len(all_parallel_runs)} of {total_num_runs} {avg_per_it} s/it", flush=True)
                     except Empty:
                         break
                 c_time=time.time()
                 avg_per_it=(c_time-s_time)/max(total_num_runs-len(all_parallel_runs), 1)
-                print(f"{len(all_parallel_runs)} of {total_num_runs} {avg_per_it} s/it")
+                
 
     df = pd.DataFrame(data=object_infos)
     df.to_csv(csv_path)
