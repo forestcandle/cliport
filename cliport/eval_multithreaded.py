@@ -301,7 +301,8 @@ def call_main(vcfg):
                         new_parallel_runs.append(p)
                         all_done=False
                 all_parallel_runs=new_parallel_runs
-                while True:
+                num_sent=0
+                while num_sent<20:
                     try:
                         act_inputs=agent_queue.get(timeout=0.02)
                         act = agent.act(act_inputs['obs'], act_inputs['info'], act_inputs['goal'])
@@ -310,6 +311,7 @@ def call_main(vcfg):
                         c_time=time.time()
                         avg_per_it=(c_time-s_time)/max(total_num_runs-len(all_parallel_runs), 1)
                         print(f"{len(all_parallel_runs)} of {total_num_runs} {avg_per_it} s/it", flush=True)
+                        num_sent+=1
                     except Empty:
                         break
                 
