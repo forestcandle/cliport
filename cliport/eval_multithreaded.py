@@ -96,7 +96,7 @@ def do_run(seed, command_strs, completed_experiments, i, j, episode, ds, vcfg, d
             video_name = f"{vcfg['model_task']}-{video_name}"
 
         env.start_rec(video_name)
-
+    print("a")
     object_infos = []
     cmd_reward = 0
     for step in range(task.max_steps):
@@ -107,8 +107,9 @@ def do_run(seed, command_strs, completed_experiments, i, j, episode, ds, vcfg, d
         act=agent_output_queue.get()
         lang_goal = info['lang_goal']
 #         print(f'Lang Goal: {lang_goal}', flush=True)
+        print("b")
         obs, reward, done, info = env.step(act)
-
+        print("c")
         object_info = []
         object_info.append(j)
         object_info.append(i)
@@ -116,13 +117,14 @@ def do_run(seed, command_strs, completed_experiments, i, j, episode, ds, vcfg, d
         object_info.append(step)
 
         if "pose" in info:
+            print("pose in info", info, flush=True)
             for obj_id in info['pose']:
                 object_info.append(task.object_log_info[obj_id])
                 object_info.append(info['pose'][obj_id])
                 object_info.append(info['placed'][obj_id])
             object_infos.append(object_info)
         else:
-#             print("pose not in info", info, flush=True)
+            print("pose not in info", info, flush=True)
             object_info.append(None)
             object_info.append({})
             object_info.append({6:0})
@@ -131,6 +133,7 @@ def do_run(seed, command_strs, completed_experiments, i, j, episode, ds, vcfg, d
         total_reward += reward
         cmd_reward+=(reward>0)
 #         print(f'Total Reward: {total_reward:.3f} | Done: {done}\n', flush=True)
+        print("d")
         if done:
             break
     

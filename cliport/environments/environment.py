@@ -241,8 +241,8 @@ class Environment(gym.Env):
 
         obs = self._get_obs()
 
-        if not "pose" in info:
-            print("env pose not in info")
+#         if not "pose" in info:
+#             print("env pose not in info")
 
         return obs, reward, done, info
 
