@@ -311,7 +311,7 @@ def call_main(vcfg):
                         agent_output_queues[k].put(act)
                         c_time=time.time()
                         avg_per_it=(c_time-s_time)/max(total_num_runs-len(all_parallel_runs), 1)
-                        print(f"{len(all_parallel_runs)} of {total_num_runs} {avg_per_it} s/it", flush=True)
+                        print(f"{id_group_pair_ind} 10000j{len(all_parallel_runs)} of {total_num_runs} {avg_per_it} s/it", flush=True)
                         num_sent+=1
                     except Empty:
                         break
