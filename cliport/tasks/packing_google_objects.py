@@ -776,6 +776,63 @@ class PackingUnseenGoogleObjectsRaceSeq(PackingSeenGoogleObjectsSeq):
             ],
         }
 
+class PackingUnseenGoogleObjectsDollsSeq(PackingSeenGoogleObjectsSeq):
+    """Packing Unseen Google Objects Sequence task."""
+
+    def __init__(self):
+        super().__init__()
+        self.race_test_hack = True
+
+    def get_object_names(self):
+        return {
+            'train': [
+                'alarm clock',
+                'android toy',
+                'black boot with leopard print',
+                'black fedora',
+                'black razer mouse',
+                'black sandal',
+                'black shoe with orange stripes',
+                'bull figure',
+                'butterfinger chocolate',
+                'c clamp',
+                'can opener',
+                'crayon box',
+                'dog statue',
+                'frypan',
+                'green and white striped towel',
+                'grey soccer shoe with cleats',
+                'hard drive',
+                'honey dipper',
+                'magnifying glass',
+                'mario figure',
+                'nintendo 3ds',
+                'nintendo cartridge',
+                'office depot box',
+                'orca plush toy',
+                'pepsi gold caffeine free box',
+                'pepsi wild cherry box',
+                'porcelain cup',
+                'purple tape',
+                'red and white flashlight',
+                'rhino figure',
+                'rocket racoon figure',
+                'scissors',
+                'silver tape',
+                'spatula with purple head',
+                'spiderman figure',
+                'tablet',
+                'toy school bus',
+            ],
+            'val': [
+                'white male doll',
+                'white female doll',
+            ],
+            'test': [
+                'white male doll',
+                'white female doll',
+            ],
+        }
 
 class PackingUnseenGoogleObjectsRaceBlackSeq(PackingSeenGoogleObjectsSeq):
     """Packing Unseen Google Objects Sequence task."""

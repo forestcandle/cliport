@@ -106,22 +106,17 @@ hydra:
   overrides:
     hydra: []
     task:
-    - model_task=multi-language-conditioned
-    - eval_task=packing-unseen-google-objects-race-seq
-    - agent=cliport
+    - n=4
+    - task=packing-unseen-google-objects-race-seq
     - mode=test
-    - n_demos=2
-    - train_demos=1000
-    - exp_folder=cliport_quickstart
-    - checkpoint_type=val_missing
-    - update_results=True
-    - disp=False
+    - data_dir=home/vickyz/cliport/data
+    - disp=True
   job:
-    name: eval
-    override_dirname: agent=cliport,checkpoint_type=val_missing,disp=False,eval_task=packing-unseen-google-objects-race-seq,exp_folder=cliport_quickstart,mode=test,model_task=multi-language-conditioned,n_demos=2,train_demos=1000,update_results=True
+    name: demos
+    override_dirname: data_dir=home/vickyz/cliport/data,disp=True,mode=test,n=4,task=packing-unseen-google-objects-race-seq
     id: ???
     num: ???
-    config_name: eval
+    config_name: data
     env_set: {}
     env_copy: []
     config:
