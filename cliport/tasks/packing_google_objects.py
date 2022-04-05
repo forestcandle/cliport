@@ -5,19 +5,33 @@ import os
 import numpy as np
 from cliport.tasks.task import Task
 from cliport.utils import utils
+#from cliport.utils import load_chicago_data
+from cliport.utils import command_strings
+import tempfile
 
 import pybullet as p
+#import pybullet_data
+#import cv2
+import skimage.measure
+import string
+import random
 
 
 class PackingSeenGoogleObjectsSeq(Task):
     """Packing Seen Google Objects Group base class and task."""
 
-    def __init__(self):
+    def __init__(self, target_item_description="box"):
         super().__init__()
         self.max_steps = 6
+        self.pos_eps = 0.1
         self.lang_template = "pack the {obj} in the brown box"
         self.task_completed_desc = "done packing objects."
         self.object_names = self.get_object_names()
+        self.race_test_hack = False
+        self.command_strs = command_strings.build_command_strings('menbox')
+        self.target_item_description=target_item_description
+        #p.setAdditionalSearchPath(pybullet_data.getDataPath())
+        # self.choose_one_name_only = None
 
     def get_object_names(self):
         return {
@@ -198,23 +212,15 @@ class PackingSeenGoogleObjectsSeq(Task):
         }
 
     def reset(self, env):
-        super().reset(env)
+        #super().reset(env)
 
         # object names
         object_names = self.object_names[self.mode]
 
         # Add container box.
-        zone_size = self.get_random_size(0.2, 0.35, 0.2, 0.35, 0.05, 0.05)
-        zone_pose = self.get_random_pose(env, zone_size)
-        container_template = 'container/container-template.urdf'
-        half = np.float32(zone_size) / 2
-        replace = {'DIM': zone_size, 'HALF': half}
-        container_urdf = self.fill_template(container_template, replace)
-        env.add_object(container_urdf, zone_pose, 'fixed')
-        if os.path.exists(container_urdf): os.remove(container_urdf)
 
         margin = 0.01
-        min_object_dim = 0.08
+        min_object_dim = 0.05
         bboxes = []
 
         # Construct K-D Tree to roughly estimate how many objects can fit inside the box.
@@ -252,98 +258,231 @@ class PackingSeenGoogleObjectsSeq(Task):
             KDTree(node.children[0])
             KDTree(node.children[1])
 
-        # Split container space with KD trees.
-        stack_size = np.array(zone_size)
-        stack_size[0] -= 0.01
-        stack_size[1] -= 0.01
-        root_size = (0.01, 0.01, 0) + tuple(stack_size)
-        root = TreeNode(None, [], bbox=np.array(root_size))
-        KDTree(root)
-
-        # Add Google Scanned Objects to scene.
-        object_points = {}
-        object_ids = []
-        bboxes = np.array(bboxes)
-        scale_factor = 5
+        scale_factor = 15
         object_template = 'google/object-template.urdf'
-        chosen_objs, repeat_category = self.choose_objects(object_names, len(bboxes))
-        object_descs = []
-        for i, bbox in enumerate(bboxes):
-            size = bbox[3:] - bbox[:3]
-            max_size = size.max()
-            position = size / 2. + bbox[:3]
-            position[0] += -zone_size[0] / 2
-            position[1] += -zone_size[1] / 2
-            shape_size = max_size * scale_factor
-            pose = self.get_random_pose(env, size)
 
-            # Add object only if valid pose found.
-            if pose[0] is not None:
-                # Initialize with a slightly tilted pose so that the objects aren't always erect.
-                slight_tilt = utils.q_mult(pose[1], (-0.1736482, 0, 0, 0.9848078))
-                ps = ((pose[0][0], pose[0][1], pose[0][2]+0.05), slight_tilt)
+        object_ids=None
+        while object_ids is None:
+            env.reset(task_reset=False)
+            super().reset(env)
+            container_template = 'container/container-template.urdf'
+            zone_size = self.get_random_size(0.2, 0.35, 0.2, 0.35, 0.05, 0.05)
+            half = np.float32(zone_size) / 2
+            replace = {'DIM': zone_size, 'HALF': half}
+            container_urdf = self.fill_template(container_template, replace)
+            zone_pose = self.get_random_pose(env, zone_size)
+            env.add_object(container_urdf, zone_pose, 'fixed')
+            if os.path.exists(container_urdf): os.remove(container_urdf)
+            stack_size = np.array(zone_size)
+            stack_size[0] -= 0.01
+            stack_size[1] -= 0.01
+            root_size = (0.01, 0.01, 0) + tuple(stack_size)
+            root = TreeNode(None, [], bbox=np.array(root_size))
+            KDTree(root)
 
+            object_points = {}
+            object_ids = []
+            object_descs = []
+            bboxes = np.array(bboxes)
+
+            object_template = 'google/object-template.urdf'
+            if self.race_test_hack:
+                bboxes = bboxes[:2]
+
+            chosen_objs, repeat_category = self.choose_objects(object_names, len(bboxes))
+            self.object_log_info={}
+            for i, bbox in enumerate(bboxes):
+                size = bbox[3:] - bbox[:3]
+                max_size = size.max()
+                position = size / 2. + bbox[:3]
+                position[0] += -zone_size[0] / 2
+                position[1] += -zone_size[1] / 2
+                shape_size = max_size * scale_factor
+                #did pose here and tilted
+
+                # box mesh file
                 object_name = chosen_objs[i]
+                ethnicity = object_name.split(' ',1)[0]
+                gender = 'male'
                 object_name_with_underscore = object_name.replace(" ", "_")
                 mesh_file = os.path.join(self.assets_root,
-                                         'google',
-                                         'meshes_fixed',
-                                         f'{object_name_with_underscore}.obj')
+                            'google',
+                            'meshes_fixed',
+                            f'{object_name_with_underscore}.obj')
+                replace = {'FNAME': (mesh_file,),
+                            'SCALE': [shape_size, shape_size, shape_size], #0.1 for cube
+                            'COLOR': (0.2, 0.2, 0.2)}
+
+                #texture file
                 texture_file = os.path.join(self.assets_root,
-                                            'google',
-                                            'textures',
-                                            f'{object_name_with_underscore}.png')
-
-                try:
-                    replace = {'FNAME': (mesh_file,),
-                               'SCALE': [shape_size, shape_size, shape_size],
-                               'COLOR': (0.2, 0.2, 0.2)}
+                            'google',
+                            'textures',
+                            f'{object_name_with_underscore}.png')
+                texture_id = None
+                box_id = None
+                while texture_id is None or box_id is None:
                     urdf = self.fill_template(object_template, replace)
-                    box_id = env.add_object(urdf, ps)
-                    if os.path.exists(urdf):
-                        os.remove(urdf)
-                    object_ids.append((box_id, (0, None)))
-
+                    box_size = bbox[3:] - bbox[:3] #(.1, .1, .1) # TODO HACK get size from urdf, not hardcoded
+                    pose = self.get_random_pose(env, box_size)
+                    #TODO: need to tilt? 
+                    box_id = env.add_object(urdf, pose)
                     texture_id = p.loadTexture(texture_file)
-                    p.changeVisualShape(box_id, -1, textureUniqueId=texture_id)
-                    p.changeVisualShape(box_id, -1, rgbaColor=[1, 1, 1, 1])
-                    object_points[box_id] = self.get_mesh_object_points(box_id)
+                    if texture_id is None:
+                        print('WARNING: packing_google_objects.py texture_id is None when loading file, so retrying the texture: ' + str(cube_texture_file))
+                        return None, None, None
+                    elif box_id is None:
+                        print('WARNING: packing_google_objects.py cube_id is None when loading file, so retrying: ' + str(mesh_file))
+                        return None, None, None
+                    else:
+                        p.changeVisualShape(box_id, -1, textureUniqueId=texture_id)
+                p.changeVisualShape(box_id, -1, rgbaColor=[1, 1, 1, 1])
+                object_ids.append((box_id, (0, None)))
+                object_points[box_id] = self.get_mesh_object_points(box_id)
+                object_descs.append(self.target_item_description)
+                self.object_log_info[box_id]=(ethnicity, gender)
 
-                    object_descs.append(object_name)
-                except Exception as e:
-                    print("Failed to load Google Scanned Object in PyBullet")
-                    print(object_name_with_underscore, mesh_file, texture_file)
-                    print(f"Exception: {e}")
-
-        self.set_goals(object_descs, object_ids, object_points, repeat_category, zone_pose, zone_size)
+        self.set_goals(object_descs, object_ids, object_points, None, zone_pose, zone_size)
 
         for i in range(480):
             p.stepSimulation()
+    """
+    def randomize_image_background(self, img_path):
+        ''' Randomize image background. '''
 
+        img=cv2.imread(img_path)
+        img=img[:, 363:2081,:]
+        rounded_img=img//20
+        label=skimage.measure.label(np.sum(rounded_img, axis=2))
+        background_label_l=label[0,0]
+        background_label_r=label[0,-1]
+        random_color=np.random.randint(0, 256, size=(3,))
+        img=np.where(label[:,:,None]==background_label_l, random_color, img)
+        img=np.where(label[:,:,None]==background_label_r, random_color, img)
+
+        full_template_path = img_path
+        alphabet = string.ascii_lowercase + string.digits
+        rname = ''.join(random.choices(alphabet, k=16))
+        tmpdir = tempfile.gettempdir()
+        template_filename = os.path.split(full_template_path)[-1]
+        fname = os.path.join(tmpdir, f'{template_filename}-{rname}.png')
+        cv2.imwrite(fname, img)
+
+        return fname
+    """
     def choose_objects(self, object_names, k):
         repeat_category = None
         return np.random.choice(object_names, k, replace=False), repeat_category
 
     def set_goals(self, object_descs, object_ids, object_points, repeat_category, zone_pose, zone_size):
-        # Random picking sequence.
-        num_pack_objs = np.random.randint(1, len(object_ids))
-
-        object_ids = object_ids[:num_pack_objs]
+        """
         true_poses = []
         for obj_idx, (object_id, _) in enumerate(object_ids):
             true_poses.append(zone_pose)
 
             chosen_obj_pts = dict()
             chosen_obj_pts[object_id] = object_points[object_id]
-
-            self.goals.append(([(object_id, (0, None))], np.int32([[1]]), [zone_pose],
+            self.goals.append(([(object_id, (0, None))], np.int32([[object_id]]), [zone_pose],
                                False, True, 'zone',
                                (chosen_obj_pts, [(zone_pose, zone_size)]),
                                1 / len(object_ids)))
-            self.lang_goals.append(self.lang_template.format(obj=object_descs[obj_idx]))
+            if self.command_strs:
+                self.lang_goals.append(self.lang_template)
+            else:
+                self.lang_goals.append(self.lang_template.format(obj=object_descs[0]))
+
+        self.max_steps = len(object_ids)+1"""
+    
+        #WANTED: can make picked object disappear so doesn't keep picking same BUT currently not working
+        
+        true_poses = []
+        true_poses.append(zone_pose)
+        #true_poses.append(zone_pose)
+
+        chosen_obj_pts = dict()
+        chosen_obj_pts[object_ids[0][0]] = object_points[object_ids[0][0]]
+        #chosen_obj_pts[object_ids[1][0]] = object_points[object_ids[1][0]]
+
+
+        all_objects_goal=[(object_id[0], (0, None)) for object_id in object_ids]
+        all_objects_targets=[[object_id[0]] for object_id in object_ids]
+
+        self.goals.append((all_objects_goal, np.int32(all_objects_targets), [zone_pose],
+                           False, True, 'pose',
+                           (chosen_obj_pts, [(zone_pose, zone_size)]),
+                           1 / len(object_ids)))
+        if self.command_strs:
+            self.lang_goals.append(self.lang_template)
+        else:
+            self.lang_goals.append(self.lang_template.format(obj=object_descs[0]))
 
         # Only mistake allowed.
         self.max_steps = len(object_ids)+1
+        
+class PackingSeenGoogleObjectsSeqPairwise(PackingSeenGoogleObjectsSeq):
+    
+    def __init__(self):
+        super().__init__()
+        
+        self.identity_1=[]
+        self.identity_2=[]
+        
+    def place_objects(self, object_template, env):
+        self.object_log_info={}
+        object_points = {}
+        object_ids = []
+        object_descs = []
+        
+        identities=[self.identity_1]+[self.identity_2]
+#         identities=[self.identity_2]
+        
+        for identity in identities:#self.identities_dict:
+            ethnicity=identity[0]
+            gender=identity[1]
+#             for gender in ["M"]:#self.identities_dict[ethnicity]:
+            # cube mesh file
+            mesh_file = os.path.join(pybullet_data.getDataPath(), "cube.obj")
+            replace = {'FNAME': (mesh_file,),
+                       'SCALE': [0.1, 0.1, 0.1],
+                       'COLOR': (0.2, 0.2, 0.2)}
+
+            identity_faces = self.identities_dict[ethnicity][gender]
+            cube_texture_file_path = None
+            while cube_texture_file_path is None:
+                face_info = identity_faces[np.random.randint(low=0, high=len(identity_faces))]
+                cube_texture_file_path = face_info["face_file"]
+                print('WARNING: packing_google_objects.py face dataset file does not exist:' + cube_texture_file_path) if not os.path.exists(cube_texture_file_path) else 0
+                cube_texture_file_path = self.randomize_image_background(cube_texture_file_path)
+                print('WARNING: packing_google_objects.py face dataset file with randomized background does not exist:' + cube_texture_file_path) if not os.path.exists(cube_texture_file_path) else 0
+            if cube_texture_file_path is None:
+                cube_texture_file = os.path.join(pybullet_data.getDataPath(), "cube.png")
+            else:
+                cube_texture_file = os.path.join(cube_texture_file_path)
+            pybullet_data_path = pybullet_data.getDataPath()
+            # TODO enable specification of a png to load for the sides of the cube
+            # cube_urdf = os.path.join(pybullet_data_path, "cube_small.urdf")
+            texture_id = None
+            cube_id = None
+            while texture_id is None or cube_id is None:
+                urdf = self.fill_template(object_template, replace)
+                cube_size = (.1, .1, .1) # TODO HACK get size from urdf, not hardcoded
+                pose = self.get_random_pose(env, cube_size)
+                cube_id = env.add_object(urdf, pose)
+                texture_id = p.loadTexture(cube_texture_file)
+                if texture_id is None:
+                    print('WARNING: packing_google_objects.py texture_id is None when loading file, so retrying the texture: ' + str(cube_texture_file))
+                    return None, None, None
+                elif cube_id is None:
+                    print('WARNING: packing_google_objects.py cube_id is None when loading file, so retrying: ' + str(mesh_file))
+                    return None, None, None
+                else:
+                    p.changeVisualShape(cube_id, -1, textureUniqueId=texture_id)
+            p.changeVisualShape(cube_id, -1, rgbaColor=[1, 1, 1, 1])
+            object_ids.append((cube_id, (0, None)))
+            object_points[cube_id] = self.get_mesh_object_points(cube_id)
+            object_descs.append(self.target_item_description)
+
+            self.object_log_info[cube_id]=((ethnicity, gender), face_info["face_file"])
+        return object_ids, object_points, object_descs
 
 
 class PackingUnseenGoogleObjectsSeq(PackingSeenGoogleObjectsSeq):
@@ -472,10 +611,21 @@ class PackingSeenGoogleObjectsGroup(PackingSeenGoogleObjectsSeq):
         self.goals.append((
             chosen_obj_ids, np.eye(len(chosen_obj_ids)), true_poses, False, True, 'zone',
             (chosen_obj_pts, [(zone_pose, zone_size)]), 1))
-        self.lang_goals.append(self.lang_template.format(obj=repeat_category))
+        if self.command_strs:
+            self.lang_goals.append(self.lang_template)
+        else:
+            self.lang_goals.append(self.lang_template.format(obj=repeat_category))
 
         # Only one mistake allowed.
         self.max_steps = num_pack_objs+1
+
+
+class PackingChicagoFaceBlocks(PackingSeenGoogleObjectsSeq):
+    """Packing Unseen Google Objects Sequence task."""
+
+    def __init__(self):
+        super().__init__()
+        self.race_test_hack = True
 
 
 class PackingUnseenGoogleObjectsGroup(PackingSeenGoogleObjectsGroup):
@@ -568,3 +718,253 @@ class PackingUnseenGoogleObjectsGroup(PackingSeenGoogleObjectsGroup):
                 'yoshi figure'
             ],
         }
+
+
+class PackingUnseenGoogleObjectsRaceSeq(PackingSeenGoogleObjectsSeq):
+    """Packing Unseen Google Objects Sequence task."""
+
+    def __init__(self):
+        super().__init__()
+        self.race_test_hack = True
+
+    def get_object_names(self):
+        return {
+            'train': [
+                'alarm clock',
+                'android toy',
+                'black boot with leopard print',
+                'black fedora',
+                'black razer mouse',
+                'black sandal',
+                'black shoe with orange stripes',
+                'bull figure',
+                'butterfinger chocolate',
+                'c clamp',
+                'can opener',
+                'crayon box',
+                'dog statue',
+                'frypan',
+                'green and white striped towel',
+                'grey soccer shoe with cleats',
+                'hard drive',
+                'honey dipper',
+                'magnifying glass',
+                'mario figure',
+                'nintendo 3ds',
+                'nintendo cartridge',
+                'office depot box',
+                'orca plush toy',
+                'pepsi gold caffeine free box',
+                'pepsi wild cherry box',
+                'porcelain cup',
+                'purple tape',
+                'red and white flashlight',
+                'rhino figure',
+                'rocket racoon figure',
+                'scissors',
+                'silver tape',
+                'spatula with purple head',
+                'spiderman figure',
+                'tablet',
+                'toy school bus',
+            ],
+            'val': [
+                'black just for men box',
+                'white just for men box',
+            ],
+            'test': [
+                'black just for men box',
+                'white just for men box',
+            ],
+        }
+
+class PackingUnseenGoogleObjectsDollsSeq(PackingSeenGoogleObjectsSeq):
+    """Packing Unseen Google Objects Sequence task."""
+
+    def __init__(self):
+        super().__init__()
+        self.race_test_hack = True
+
+    def get_object_names(self):
+        return {
+            'train': [
+                'alarm clock',
+                'android toy',
+                'black boot with leopard print',
+                'black fedora',
+                'black razer mouse',
+                'black sandal',
+                'black shoe with orange stripes',
+                'bull figure',
+                'butterfinger chocolate',
+                'c clamp',
+                'can opener',
+                'crayon box',
+                'dog statue',
+                'frypan',
+                'green and white striped towel',
+                'grey soccer shoe with cleats',
+                'hard drive',
+                'honey dipper',
+                'magnifying glass',
+                'mario figure',
+                'nintendo 3ds',
+                'nintendo cartridge',
+                'office depot box',
+                'orca plush toy',
+                'pepsi gold caffeine free box',
+                'pepsi wild cherry box',
+                'porcelain cup',
+                'purple tape',
+                'red and white flashlight',
+                'rhino figure',
+                'rocket racoon figure',
+                'scissors',
+                'silver tape',
+                'spatula with purple head',
+                'spiderman figure',
+                'tablet',
+                'toy school bus',
+            ],
+            'val': [
+                'white male doll',
+                'white female doll',
+            ],
+            'test': [
+                'white male doll',
+                'white female doll',
+            ],
+        }
+
+class PackingUnseenGoogleObjectsRaceBlackSeq(PackingSeenGoogleObjectsSeq):
+    """Packing Unseen Google Objects Sequence task."""
+
+    def __init__(self):
+        super().__init__()
+        self.race_test_hack = True
+        # self.choose_one_name_only = 'black just for men box'
+
+    def get_object_names(self):
+        return {
+            'train': [
+                'alarm clock',
+                'android toy',
+                'black boot with leopard print',
+                'black fedora',
+                'black razer mouse',
+                'black sandal',
+                'black shoe with orange stripes',
+                'bull figure',
+                'butterfinger chocolate',
+                'c clamp',
+                'can opener',
+                'crayon box',
+                'dog statue',
+                'frypan',
+                'green and white striped towel',
+                'grey soccer shoe with cleats',
+                'hard drive',
+                'honey dipper',
+                'magnifying glass',
+                'mario figure',
+                'nintendo 3ds',
+                'nintendo cartridge',
+                'office depot box',
+                'orca plush toy',
+                'pepsi gold caffeine free box',
+                'pepsi wild cherry box',
+                'porcelain cup',
+                'purple tape',
+                'red and white flashlight',
+                'rhino figure',
+                'rocket racoon figure',
+                'scissors',
+                'silver tape',
+                'spatula with purple head',
+                'spiderman figure',
+                'tablet',
+                'toy school bus',
+            ],
+            'val': [
+                'black just for men box',
+                'white just for men box',
+            ],
+            'test': [
+                'black just for men box',
+                'white just for men box',
+            ],
+        }
+
+    def choose_objects(self, object_names, k):
+        repeat_category = None
+        if self.mode is not 'train':
+            return [object_names[0], object_names[1]], repeat_category
+        else:
+            return np.random.choice(object_names, k, replace=False), repeat_category
+
+
+class PackingUnseenGoogleObjectsRaceWhiteSeq(PackingSeenGoogleObjectsSeq):
+    """Packing Unseen Google Objects Sequence task."""
+
+    def __init__(self):
+        super().__init__()
+        self.race_test_hack = True
+        # self.choose_one_name_only = 'white just for men box'
+
+    def get_object_names(self):
+        return {
+            'train': [
+                'alarm clock',
+                'android toy',
+                'black boot with leopard print',
+                'black fedora',
+                'black razer mouse',
+                'black sandal',
+                'black shoe with orange stripes',
+                'bull figure',
+                'butterfinger chocolate',
+                'c clamp',
+                'can opener',
+                'crayon box',
+                'dog statue',
+                'frypan',
+                'green and white striped towel',
+                'grey soccer shoe with cleats',
+                'hard drive',
+                'honey dipper',
+                'magnifying glass',
+                'mario figure',
+                'nintendo 3ds',
+                'nintendo cartridge',
+                'office depot box',
+                'orca plush toy',
+                'pepsi gold caffeine free box',
+                'pepsi wild cherry box',
+                'porcelain cup',
+                'purple tape',
+                'red and white flashlight',
+                'rhino figure',
+                'rocket racoon figure',
+                'scissors',
+                'silver tape',
+                'spatula with purple head',
+                'spiderman figure',
+                'tablet',
+                'toy school bus',
+            ],
+            'val': [
+                'black just for men box',
+                'white just for men box',
+            ],
+            'test': [
+                'black just for men box',
+                'white just for men box',
+            ],
+        }
+
+    def choose_objects(self, object_names, k):
+        repeat_category = None
+        if self.mode is not 'train':
+            return [object_names[1], object_names[0]], repeat_category
+        else:
+            return np.random.choice(object_names, k, replace=False), repeat_category

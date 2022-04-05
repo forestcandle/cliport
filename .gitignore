@@ -1,7 +1,8 @@
 # Folders
-cliport/data/
+data/
+cliport_quickstart/
 cliport/outputs/
-cliport/notebooks/
+notebooks/
 cliport/jobs/
 jobs/
 videos/
