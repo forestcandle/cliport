@@ -1,0 +1,10 @@
+- model_task=multi-language-conditioned
+- eval_task=packing-unseen-google-objects-race-seq
+- agent=cliport
+- mode=test
+- n_demos=2
+- train_demos=1000
+- exp_folder=cliport_quickstart
+- checkpoint_type=val_missing
+- update_results=True
+- disp=False
