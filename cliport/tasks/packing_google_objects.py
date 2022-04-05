@@ -374,6 +374,7 @@ class PackingSeenGoogleObjectsSeq(Task):
         return np.random.choice(object_names, k, replace=False), repeat_category
 
     def set_goals(self, object_descs, object_ids, object_points, repeat_category, zone_pose, zone_size):
+        """
         true_poses = []
         for obj_idx, (object_id, _) in enumerate(object_ids):
             true_poses.append(zone_pose)
@@ -389,9 +390,9 @@ class PackingSeenGoogleObjectsSeq(Task):
             else:
                 self.lang_goals.append(self.lang_template.format(obj=object_descs[0]))
 
-        self.max_steps = len(object_ids)+1
+        self.max_steps = len(object_ids)+1"""
     
-        """ #Faulty : cannot terminate
+        #Faulty : cannot terminate in demos
         true_poses = []
         true_poses.append(zone_pose)
         #true_poses.append(zone_pose)
@@ -414,7 +415,7 @@ class PackingSeenGoogleObjectsSeq(Task):
             self.lang_goals.append(self.lang_template.format(obj=object_descs[0]))
 
         # Only mistake allowed.
-        self.max_steps = len(object_ids)+1"""
+        self.max_steps = len(object_ids)+1
         
 class PackingSeenGoogleObjectsSeqPairwise(PackingSeenGoogleObjectsSeq):
     
