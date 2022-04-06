@@ -6,6 +6,9 @@ cliport/jobs/
 jobs/
 videos/
 checkpoints/
+cliport_quickstart
+cliport/cliport_quickstart
+data
 
 # Large Asserts
 cliport/environments/assets/google/

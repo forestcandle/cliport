@@ -25,6 +25,10 @@ def main(cfg):
     record = cfg['record']['save_video']
     save_data = cfg['save_data']
 
+    if cfg['task']=="packing-unseen-google-objects-race-seq-pairwise":
+        task.identity_1 = ['W', 'M']
+        task.identity_2 = ['B', 'M']
+
     # Initialize scripted oracle agent and dataset.
     agent = task.oracle(env)
     data_path = os.path.join(cfg['data_dir'], "{}-{}".format(cfg['task'], task.mode))
@@ -85,7 +89,8 @@ def main(cfg):
             env.end_rec()
 
         # Only save completed demonstrations.
-        if save_data and total_reward > 0.99:
+        #if save_data and total_reward > 0.99:
+        if save_data:
             dataset.add(seed, episode)
 
 

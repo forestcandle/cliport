@@ -59,14 +59,14 @@ def call_main(vcfg):
                                             tcfg,
                                             group=eval_task,
                                             mode=mode,
-                                            n_demos=100,
+                                            n_demos=5,
                                             augment=False)
     # elif mode is not 'test':
     else:
         # TODO HACK test mode disabled for race experiments, make code work properly
         ds = dataset.RavensDataset(os.path.join(vcfg['data_dir'], f"{eval_task}-{mode}"),
                                    tcfg,
-                                   n_demos=100,
+                                   n_demos=5,
                                    augment=False)
 
     all_results = {}
