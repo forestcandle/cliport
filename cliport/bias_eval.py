@@ -472,7 +472,9 @@ def bar_plot(data, save_path, y_label, title, x_axis_label='Identity'):
     values=np.array(new_values)
     std_errs=np.array(new_std_errs)
     x_pos=np.array(list(range(values.shape[0])))
-
+    #print("x_pos: ", x_pos)
+    #print("values: ", values)
+    #print("std: ", values-single_std_errs[:,0])
     make_bar_plot(x_pos, values, values-single_std_errs[:,0], labels, y_label, title, save_path)
 
 def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save_path, x_axis_label='', percentage=True):
@@ -491,8 +493,15 @@ def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save
     if percentage:
         values *= 100
         single_std_errs *= 100
-    xpos_1d = np.squeeze(x_pos).astype(int)
-    ordered_std_err_1d = np.squeeze(single_std_errs)[xpos_1d]
+    if len(x_pos) == 1:
+        xpos_1d = x_pos
+        ordered_std_err_1d = single_std_errs
+    
+    else:
+        xpos_1d = np.squeeze(x_pos).astype(int)
+        #print("xpos_1d: ", xpos_1d)
+        #print("squeezed error: ", np.squeeze(single_std_errs))
+        ordered_std_err_1d = np.squeeze(single_std_errs)[xpos_1d]
     ordered_values = values[xpos_1d]
     ordered_columns = np.array(x_labels)[xpos_1d]
     viz_y_label = y_label
@@ -553,13 +562,17 @@ def make_bar_plot(x_pos, values, single_std_errs, x_labels, y_label, title, save
     y_difflabel = viz_y_label + ' difference'
     x_difflabel = x_axis_label + ' difference'
     diffdf = pd.DataFrame({x_axis_label: diffnames, y_difflabel: diffs, 'plot_test_todo_Significant': significants}).sort_values(y_difflabel)
-    ax = sns.catplot(data=diffdf, kind="bar", x=x_axis_label, y=y_difflabel)
-    # ax = sns.catplot(data=diffdf, kind="bar", x=x_axis_label, y=y_difflabel, hue="Significant")
-    plt.xticks(rotation=90)
-    plt.tight_layout()
-    plt.savefig(save_path + '_diff.pdf')
-    diffdf.to_csv(save_path + '_diff.csv')
-    # plt.show()
+    #print("diffdf: ", diffdf)
+    #print("x labels: ", x_axis_label)
+    #print("y labels: ", y_difflabel)
+    if not diffdf.empty:
+        ax = sns.catplot(data=diffdf, kind="bar", x=x_axis_label, y=y_difflabel)
+        # ax = sns.catplot(data=diffdf, kind="bar", x=x_axis_label, y=y_difflabel, hue="Significant")
+        plt.xticks(rotation=90)
+        plt.tight_layout()
+        plt.savefig(save_path + '_diff.pdf')
+        diffdf.to_csv(save_path + '_diff.csv')
+        # plt.show()
 
 
 def get_stats_for_run(runs_file, cmd_subsets, subset_names):
@@ -721,8 +734,8 @@ def get_stats_for_run(runs_file, cmd_subsets, subset_names):
     # Names of each metric
     metric_names=("order object placed", "object placed", "object moved", "object not moved")
 
-    dicts=(placed_dict,)
-    metric_names=("object placed",)
+    #dicts=(placed_dict,)
+    #metric_names=("object placed",)
     # Compute means and 90% CIs for each identity-metric dict
     for cmd_subset_ind in range(len(cmd_subsets)):
         cmd_list=cmd_subsets[cmd_subset_ind]
@@ -904,7 +917,8 @@ if __name__ == '__main__':
     person_entity_commands = build_command_strings(entity_list=['person'])
     block_entity_commands = build_command_strings(entity_list=['block'])
     # get_stats_for_run(options.runs_file, [[],no_entity_commands, person_entity_commands, block_entity_commands], ["all", 'no_entity', 'person', 'block'])
-    get_stats_for_run(options.runs_file, [[]], ["all"])
+    #get_stats_for_run(options.runs_file, [[]], ["all"])
+    get_stats_for_run(options.runs_file, [["pack the black block in the brown box"]], ["one"])
     # get_stats_for_run(options.runs_file, [block_entity_commands], ['block'])
     # get_stats_for_run(options.runs_file, [person_entity_commands], ['person'])
     # get_stats_for_run(options.runs_file, [no_entity_commands], ['no_entity'])

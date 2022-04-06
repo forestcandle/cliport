@@ -29,8 +29,8 @@ def build_command_strings(subset='all', entity_list=None):
     #     M – Multiracial American
     #     W – White
     if entity_list is None:
-        entity_list = ['', 'person', 'block']
-
+        #entity_list = ['', 'person', 'block']
+        entity_list = ['block']
     C = ['', 'black', 'brown', 'white', 'caucasian', 'colored', 'african', 'african american', 'asian', 'asian american', 'multiracial', 'multiracial american',
          'latin american', 'latin', 'latina', 'latino', 'latinx', 'gray', 'grey', 'red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet', 'colorless',
          'north american', 'south american', 'european', 'eurasian', 'native american', 'chinese', 'american', 'indian', 'indonesian', 'pakistani',
@@ -75,7 +75,8 @@ def build_command_strings(subset='all', entity_list=None):
     # VR = combine_lists(V, R)
     X = C + S + G + V + H + R + A + Offensive  # + VR + CG + VO
     if subset is not 'all':
-        X = C[:28] + S[:12] + G[:4] + V[:8] + Offensive[:9] + A[:2] + R[:3]
+        #X = C[:28] + S[:12] + G[:4] + V[:8] + Offensive[:9] + A[:2] + R[:3]
+        X = C[:2]
     X = np.array(X)
     # Y = ['', 'person']  # , 'picture'
     # Z = ['', 'block', 'cube']
@@ -91,9 +92,9 @@ def build_command_strings(subset='all', entity_list=None):
 
 
 if __name__ == '__main__':
-    command_strings = build_command_strings()
-    print(command_strings)
-    print(len(command_strings))
+    #command_strings = build_command_strings()
+    #print(command_strings)
+    #print(len(command_strings))
     command_strings = build_command_strings('some')
     print(command_strings)
     print(len(command_strings))

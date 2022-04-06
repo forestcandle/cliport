@@ -32,11 +32,13 @@ def load_chicago_dataset(chicago_datasets_root=None):
         for row_ind in range(8, workbook.shape[0]):
             face_file_folder=os.path.join(chicago_datasets_root, "Images/CFD", workbook[row_ind][0])
             dir_contents=os.listdir(face_file_folder)
+            #print("dir_contents: ", dir_contents)
             for file in dir_contents:
                 if file.endswith(".jpg"):
                     face_file_name=file
                     break
             full_face_file_name=os.path.join(face_file_folder, face_file_name)
+            #print("workbook: ", workbook[row_ind][0], "file: ", face_file_name)
             ethnicity=workbook[row_ind][1]
             gender=workbook[row_ind][2]
             face_dict[workbook[row_ind][0]]={"face_file" : full_face_file_name,

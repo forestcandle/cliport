@@ -121,5 +121,5 @@ hydra:
         exclude_keys: []
   runtime:
     version: 1.0.5
-    cwd: /home/vickyz/cliport
+    cwd: /home/vicky/Desktop/cliport
   verbose: false
